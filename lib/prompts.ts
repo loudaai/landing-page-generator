@@ -151,7 +151,7 @@ export function buildBlueprintSystemPrompt(): string {
     "contactMode": "email" | "phone" | "form-placeholder" | "booking-placeholder" | "none"
   },
   "graphics": {
-    "heroVisual": "auto-service-dashboard" | "inspection-checklist" | "booking-card" | "saas-dashboard" | "workflow-nodes" | "fitness-progress" | "study-cards" | "local-business-card" | "portfolio-showcase" | "abstract-gradient" | "none",
+     "heroVisual": "auto-service-dashboard" | "inspection-checklist" | "booking-card" | "saas-dashboard" | "workflow-nodes" | "fitness-progress" | "study-cards" | "local-business-card" | "portfolio-showcase" | "restaurant-menu" | "agency-grid" | "service-booking" | "personal-card" | "abstract-gradient" | "none",
     "sectionVisuals": [ /* same GraphicType values */ ],
     "useGeneratedImages": boolean
   }
@@ -175,8 +175,9 @@ Section objects (use only these "type" values, each needs a unique "id" string):
 How to design:
 - Choose sections that fit the user's request. Do NOT use a fixed template. A local auto repair shop should get auto-specific sections (services, process, inspection visuals, booking CTA). A study app should get education/SAAS sections. Pick the section order intentionally.
 - Choose "layout" per section based on business type and content density.
-- Choose "visualStyle" from the industry (auto, saas, fitness, education, local-business, portfolio, agency, service, restaurant-cafe, personal-brand, default).
-- Choose "heroVisual" and "sectionVisuals" from the GraphicType list that match the industry.
+  - Choose "visualStyle" from the industry (auto, saas, fitness, education, local-business, portfolio, agency, service, restaurant-cafe, personal-brand, default).
+  - Choose "heroVisual" and "sectionVisuals" from the GraphicType list that match the industry: auto/saas/fitness/education use their named graphics; local-business uses "local-business-card"; restaurant-cafe uses "restaurant-menu"; agency uses "agency-grid"; service uses "service-booking"; personal-brand uses "personal-card"; otherwise "abstract-gradient".
+  - Choose "theme.primaryColor" and "theme.accentColor" as confident, on-brand hex colors (e.g. a real indigo, emerald, amber, or rose — NOT near-gray neutrals like #f5f5f6 unless the brand is genuinely monochrome). The accent should give the page visible life.
 - Choose "ctaStrategy": primaryCTA should be the single most important action (e.g. "Book a service" for auto repair, "Request a quote" for freelancers). Set contactMode appropriately.
 - Choose "theme.backgroundStyle" to match the brand (industrial for auto, premium/soft for portfolio, minimal for SaaS). Colors must be valid hex codes.
 - Choose the visual design tokens intentionally to make the page feel crafted, not templated:

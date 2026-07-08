@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { ChatComposer } from "@/components/chat-composer";
+import { AppHeader } from "@/components/app-header";
 import { type FormErrors } from "@/lib/validation";
 import { fileToDataUrl, extractPalette } from "@/lib/logo";
 import type {
@@ -88,14 +89,7 @@ export function StartScreen({
 
   return (
     <div className="flex min-h-screen flex-col bg-black">
-      <header className="absolute left-0 top-0 z-20 flex w-full items-center justify-between px-5 py-4 sm:px-6">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/por-logo-white.svg"
-          alt="p0r by Louda"
-          className="h-auto w-10"
-        />
-      </header>
+      <AppHeader />
 
       <main className="grid min-h-[100dvh] place-items-center px-5 py-8">
         <div className="flex w-full max-w-[760px] flex-col items-center translate-y-[-3vh] sm:translate-y-[-5vh]">

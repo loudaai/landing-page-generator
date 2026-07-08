@@ -227,7 +227,13 @@ export function generateStandaloneHtmlFromBlueprint(
   const ctx: RenderCtx = { design, blueprint: bp, vars, logo, photos, useGen };
 
   const nav = bp.navigation.showNav ? renderNav(ctx) : "";
-  const sectionsHtml = bp.sections.map((s) => renderSection(s, ctx)).join("");
+  const sectionsHtml = bp.sections
+    .map((s) => renderSection(s, ctx))
+    .join("")
+    .split('<section class="')
+    .join('<section class="reveal ');
+
+  const revealScript = `<script>(function(){try{if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;var e=document.querySelectorAll('.lp .reveal');if(!('IntersectionObserver'in window)){e.forEach(function(x){x.classList.add('is-visible')});return}var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){en.target.classList.add('is-visible');io.unobserve(en.target)}})},{threshold:0.12,rootMargin:'0px 0px -8% 0px'});e.forEach(function(x){io.observe(x)})}catch(_){}})();<\/script>`;
 
   return `<!doctype html>
 <html lang="en" style="${styleAttr}">
@@ -243,6 +249,7 @@ export function generateStandaloneHtmlFromBlueprint(
   ${nav}
   ${sectionsHtml}
 </div>
+${revealScript}
 </body>
 </html>`;
 }

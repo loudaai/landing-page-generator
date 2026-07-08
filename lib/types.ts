@@ -45,6 +45,10 @@ export type GraphicType =
   | "study-cards"
   | "local-business-card"
   | "portfolio-showcase"
+  | "restaurant-menu"
+  | "agency-grid"
+  | "service-booking"
+  | "personal-card"
   | "abstract-gradient"
   | "none";
 

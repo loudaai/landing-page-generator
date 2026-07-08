@@ -62,6 +62,10 @@ const GRAPHIC_TYPES: GraphicType[] = [
   "study-cards",
   "local-business-card",
   "portfolio-showcase",
+  "restaurant-menu",
+  "agency-grid",
+  "service-booking",
+  "personal-card",
   "abstract-gradient",
   "none",
 ];
@@ -114,13 +118,17 @@ export function defaultHeroVisual(style: VisualStyle): GraphicType {
     case "education":
       return "study-cards";
     case "local-business":
-    case "service":
-    case "restaurant-cafe":
       return "local-business-card";
+    case "service":
+      return "service-booking";
+    case "restaurant-cafe":
+      return "restaurant-menu";
     case "portfolio":
       return "portfolio-showcase";
     case "agency":
-      return "workflow-nodes";
+      return "agency-grid";
+    case "personal-brand":
+      return "personal-card";
     default:
       return "abstract-gradient";
   }
