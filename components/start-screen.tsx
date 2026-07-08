@@ -94,7 +94,7 @@ export function StartScreen({
         <img
           src="/por-logo-white.svg"
           alt="p0r by Louda"
-          className="h-auto w-[120px]"
+          className="h-auto w-11"
         />
 
         <div className="flex items-center gap-2">
