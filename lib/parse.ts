@@ -1,20 +1,54 @@
 import type { LandingPageContent } from "./types";
 
-export function parseAiJson(raw: string): unknown {
-  let text = String(raw).trim();
-
-  const fence = text.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
-  if (fence) {
-    text = fence[1].trim();
-  }
-
+function extractJsonObject(text: string): Record<string, unknown> | null {
   const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start !== -1 && end !== -1 && end > start) {
-    text = text.slice(start, end + 1);
-  }
+  if (start === -1) return null;
 
-  return JSON.parse(text);
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === "\\") escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+    } else if (ch === "{") {
+      depth++;
+    } else if (ch === "}") {
+      depth--;
+      if (depth === 0) {
+        const candidate = text.slice(start, i + 1);
+        try {
+          const parsed = JSON.parse(candidate);
+          if (parsed && typeof parsed === "object") {
+            return parsed as Record<string, unknown>;
+          }
+        } catch {
+          return null;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+export function parseAiJson(raw: string): unknown {
+  const text = String(raw ?? "").trim();
+  if (!text) return {};
+
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const source = fenced ? fenced[1].trim() : text;
+
+  const parsed = extractJsonObject(source) ?? extractJsonObject(text);
+  if (parsed) return parsed;
+
+  return {};
 }
 
 function asString(value: unknown, fallback = ""): string {

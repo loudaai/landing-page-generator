@@ -2,15 +2,71 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import {
   buildSystemPrompt,
+  buildRevisionPrompt,
   buildUserPrompt,
 } from "@/lib/prompts";
 import { normalizeLandingPageContent, parseAiJson } from "@/lib/parse";
 import { validateLandingPageForm } from "@/lib/validation";
-import type { LandingPageFormInput } from "@/lib/types";
+import type { LandingPageContent, LandingPageFormInput } from "@/lib/types";
 
 const MODEL = process.env.OPENROUTER_MODEL || "tencent/hy3:free";
 const API_KEY = process.env.OPENROUTER_API_KEY;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
+
+async function callOpenRouter(messages: ChatMessage[]): Promise<string> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000);
+  try {
+    const upstream = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API_KEY}`,
+          "HTTP-Referer": SITE_URL,
+          "X-Title": "AI Landing Page Generator",
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          messages,
+          temperature: 0.7,
+        }),
+        signal: controller.signal,
+      }
+    );
+
+    if (!upstream.ok) {
+      const detail = await upstream.text().catch(() => "");
+      throw new Error(
+        `OpenRouter responded ${upstream.status}${detail ? `: ${detail.slice(0, 200)}` : ""}`
+      );
+    }
+
+    const json = await upstream.json();
+    return String(json?.choices?.[0]?.message?.content ?? "");
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function buildInput(raw: Record<string, unknown>): LandingPageFormInput {
+  return {
+    prompt: String(raw.prompt ?? "").trim(),
+    brandName: String(raw.brandName ?? ""),
+    whatItDoes: String(raw.whatItDoes ?? ""),
+    targetAudience: String(raw.targetAudience ?? ""),
+    mainProblem: String(raw.mainProblem ?? ""),
+    mainBenefit: String(raw.mainBenefit ?? ""),
+    tone: (String(raw.tone ?? "Clear and practical") ||
+      "Clear and practical") as LandingPageFormInput["tone"],
+    primaryCTA: String(raw.primaryCTA ?? ""),
+    offerOrPricing: String(raw.offerOrPricing ?? ""),
+    contactInfo: String(raw.contactInfo ?? ""),
+  };
+}
 
 export async function POST(req: NextRequest) {
   if (!API_KEY) {
@@ -28,22 +84,9 @@ export async function POST(req: NextRequest) {
   }
 
   const raw = (body ?? {}) as Record<string, unknown>;
-  const prompt = String(raw.prompt ?? "").trim();
-  const input: LandingPageFormInput = {
-    prompt,
-    brandName: String(raw.brandName ?? ""),
-    whatItDoes: String(raw.whatItDoes ?? ""),
-    targetAudience: String(raw.targetAudience ?? ""),
-    mainProblem: String(raw.mainProblem ?? ""),
-    mainBenefit: String(raw.mainBenefit ?? ""),
-    tone: (String(raw.tone ?? "Clear and practical") ||
-      "Clear and practical") as LandingPageFormInput["tone"],
-    primaryCTA: String(raw.primaryCTA ?? ""),
-    offerOrPricing: String(raw.offerOrPricing ?? ""),
-    contactInfo: String(raw.contactInfo ?? ""),
-  };
+  const input = buildInput(raw);
 
-  if (!prompt) {
+  if (!input.prompt) {
     const errors = validateLandingPageForm(input);
     if (Object.keys(errors).length > 0) {
       return NextResponse.json(
@@ -53,53 +96,48 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60000);
+  const revisionInstruction = raw.revision
+    ? String(raw.revision).trim()
+    : undefined;
+  const currentContent = (raw.currentContent ?? null) as LandingPageContent | null;
 
-  try {
-    const upstream = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API_KEY}`,
-          "HTTP-Referer": SITE_URL,
-          "X-Title": "AI Landing Page Generator",
-        },
-        body: JSON.stringify({
-          model: MODEL,
-          messages: [
-            { role: "system", content: buildSystemPrompt() },
-            { role: "user", content: buildUserPrompt(input) },
-          ],
-          temperature: 0.7,
-        }),
-        signal: controller.signal,
-      }
-    );
+  const systemPrompt = buildSystemPrompt();
+  const userPrompt = revisionInstruction
+    ? buildRevisionPrompt(input, currentContent, revisionInstruction)
+    : buildUserPrompt(input);
 
-    if (!upstream.ok) {
-      return NextResponse.json(
-        { error: "AI generation failed. Please try again." },
-        { status: 502 }
-      );
+  const attempts: ChatMessage[][] = [
+    [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    [
+      { role: "system", content: `${systemPrompt}\n\nYour previous response was not valid JSON. Respond with ONLY the JSON object and nothing else.` },
+      { role: "user", content: userPrompt },
+    ],
+  ];
+
+  let lastError = "AI generation timed out or failed. Please try again.";
+
+  for (const messages of attempts) {
+    let rawContent: string;
+    try {
+      rawContent = await callOpenRouter(messages);
+    } catch (err) {
+      lastError =
+        err instanceof Error && err.message.startsWith("OpenRouter")
+          ? "AI provider error. Please try again."
+          : "AI generation timed out or failed. Please try again.";
+      continue;
     }
 
-    const upstreamJson = await upstream.json();
-    const rawContent =
-      upstreamJson?.choices?.[0]?.message?.content ?? "";
-
     const parsed = parseAiJson(rawContent);
-    const content = normalizeLandingPageContent(parsed);
-
-    return NextResponse.json({ content });
-  } catch {
-    return NextResponse.json(
-      { error: "AI generation timed out or failed. Please try again." },
-      { status: 502 }
-    );
-  } finally {
-    clearTimeout(timeout);
+    if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0) {
+      const content = normalizeLandingPageContent(parsed);
+      return NextResponse.json({ content });
+    }
+    lastError = "The AI returned an invalid format. Retrying...";
   }
+
+  return NextResponse.json({ error: lastError }, { status: 502 });
 }

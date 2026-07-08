@@ -1,7 +1,7 @@
-import type { LandingPageFormInput } from "./types";
+import type { LandingPageContent, LandingPageFormInput } from "./types";
 
 export function buildSystemPrompt(): string {
-  return `You are a senior landing page copywriter. Return ONLY a JSON object that matches this exact shape. No markdown, no code fences, no HTML, no React, no explanations.
+  return `You are a senior landing page copywriter. Return ONLY a JSON object that matches this exact shape. No markdown, no code fences, no HTML, no React, no explanations. Output the JSON object and nothing else.
 
 {
   "brandName": string,
@@ -56,6 +56,18 @@ export function buildUserPrompt(input: LandingPageFormInput): string {
     : "";
 
   return `Create landing page copy${prompt ? ` from this request:\n"${prompt}"` : ""}${detailBlock}`;
+}
+
+export function buildRevisionPrompt(
+  input: LandingPageFormInput,
+  current: LandingPageContent | null,
+  instruction: string
+): string {
+  const base = buildUserPrompt(input);
+  const existing = current
+    ? `\n\nHere is the current landing page content (JSON). Revise it per the instruction above, keeping the same JSON shape. Do not start from scratch unless asked:\n${JSON.stringify(current)}`
+    : "";
+  return `${base}\n\nRevision instruction:\n"${instruction}"${existing}`;
 }
 
 export function buildPlannerSystemPrompt(): string {

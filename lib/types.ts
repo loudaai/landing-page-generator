@@ -45,6 +45,13 @@ export type ChatMessage = {
   role: "user" | "assistant" | "system";
   content: string;
   status?: "thinking" | "working" | "done" | "error";
+  kind?: "thought" | "work" | "summary";
+};
+
+export type ClarifyingAnswer = {
+  questionId: string;
+  question: string;
+  answer: string;
 };
 
 export type ClarifyingQuestion = {

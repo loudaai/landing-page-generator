@@ -34,7 +34,11 @@ export function ChatComposer({
 
   React.useEffect(() => {
     function onDocClick(e: MouseEvent) {
-      if (menuOpen && containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        menuOpen &&
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setMenuOpen(false);
       }
     }
@@ -69,19 +73,7 @@ export function ChatComposer({
         </div>
       ) : null}
 
-      <div className="flex items-end gap-2 rounded-2xl border border-white/10 bg-zinc-900 p-2">
-        <button
-          type="button"
-          onClick={() => plusContent && setMenuOpen((v) => !v)}
-          disabled={disabled || !plusContent}
-          className="flex h-9 w-9 flex-none items-center justify-center rounded-xl text-zinc-400 hover:bg-white/5 hover:text-white disabled:opacity-40"
-          aria-label="Add options"
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-        </button>
-
+      <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-zinc-900 p-3">
         <textarea
           ref={textareaRef}
           value={value}
@@ -89,17 +81,31 @@ export function ChatComposer({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           rows={1}
-          className="min-h-[48px] max-h-[160px] flex-1 resize-none bg-transparent py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none"
+          className="min-h-[44px] max-h-[160px] w-full resize-none bg-transparent py-1 text-sm text-white placeholder:text-zinc-600 focus:outline-none"
         />
 
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={disabled || value.trim().length === 0}
-          className="flex h-9 flex-none items-center justify-center rounded-xl bg-white px-4 text-sm font-medium text-black disabled:opacity-40"
-        >
-          {submitLabel}
-        </button>
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => plusContent && setMenuOpen((v) => !v)}
+            disabled={disabled || !plusContent}
+            className="flex h-9 w-9 flex-none items-center justify-center rounded-lg text-zinc-400 hover:bg-white/5 hover:text-white disabled:opacity-40"
+            aria-label="Add options"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={disabled || value.trim().length === 0}
+            className="flex h-9 flex-none items-center justify-center rounded-lg bg-white px-4 text-sm font-medium text-black disabled:opacity-40"
+          >
+            {submitLabel}
+          </button>
+        </div>
       </div>
     </div>
   );

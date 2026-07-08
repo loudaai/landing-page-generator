@@ -9,6 +9,7 @@ import {
   DEFAULT_DESIGN,
   EMPTY_FORM_INPUT,
   type ChatMessage,
+  type ClarifyingAnswer,
   type ClarifyingQuestion,
   type GenerationStatus,
   type LandingPageContent,
@@ -41,6 +42,17 @@ export default function Home() {
   const [followUp, setFollowUp] = React.useState("");
   const [errors, setErrors] = React.useState<FormErrors>({});
 
+  const currentContentRef = React.useRef<LandingPageContent | null>(null);
+  const formRef = React.useRef<LandingPageFormInput>(form);
+  formRef.current = form;
+  const thoughtStartRef = React.useRef(0);
+  const workStartRef = React.useRef(0);
+
+  function elapsedSince(ref: React.MutableRefObject<number>): number {
+    if (!ref.current) return 1;
+    return Math.max(1, Math.round((Date.now() - ref.current) / 1000));
+  }
+
   function pushMessage(msg: Omit<ChatMessage, "id">) {
     setChat((c) => [...c, { ...msg, id: uid() }]);
   }
@@ -57,37 +69,56 @@ export default function Home() {
     });
   }
 
-  async function runGenerate(effectivePrompt: string) {
-    setStatus("generating");
+  function finishThinking() {
     pushMessage({
       role: "assistant",
-      content: "Writing the landing page copy...",
-      status: "working",
+      content: `Thought for ${elapsedSince(thoughtStartRef)}s`,
+      status: "done",
+      kind: "thought",
     });
+  }
+
+  async function runGenerate(
+    effectivePrompt: string,
+    designArg: LandingPageDesignInput,
+    revision?: string
+  ) {
+    workStartRef.current = Date.now();
+    setStatus("generating");
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, prompt: effectivePrompt }),
+        body: JSON.stringify({
+          ...formRef.current,
+          prompt: effectivePrompt,
+          ...(revision
+            ? { revision, currentContent: currentContentRef.current }
+            : {}),
+        }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (!res.ok || !data?.content) {
         throw new Error(data?.error ?? "Generation failed. Please try again.");
       }
       const nextContent = data.content as LandingPageContent;
-      setGeneratedHtml(generateStandaloneHtml(nextContent, design));
+      currentContentRef.current = nextContent;
+      setGeneratedHtml(generateStandaloneHtml(nextContent, designArg));
       setProjectName(nextContent.brandName ?? "");
       setStatus("ready");
       pushMessage({
         role: "assistant",
-        content: "Ready. You can copy or download the HTML.",
+        content: `Worked for ${elapsedSince(workStartRef)}s — Generated the landing page.`,
         status: "done",
+        kind: "work",
       });
-    } catch {
+    } catch (err) {
       setStatus("error");
+      const message =
+        err instanceof Error ? err.message : "Generation failed. Please try again.";
       pushMessage({
         role: "assistant",
-        content: "Something went wrong. Please try Regenerate.",
+        content: message,
         status: "error",
       });
     }
@@ -101,24 +132,26 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       const result = data?.result;
-      if (result?.shouldAskQuestions && Array.isArray(result.questions) && result.questions.length) {
+      if (
+        result?.shouldAskQuestions &&
+        Array.isArray(result.questions) &&
+        result.questions.length
+      ) {
+        if (result.inferred) mergeInferred(result.inferred);
+        finishThinking();
         setQuestions(result.questions);
         setActiveQuestion(0);
-        if (result.inferred) mergeInferred(result.inferred);
         setStatus("asking");
-        pushMessage({
-          role: "assistant",
-          content: "I need a few details before building.",
-          status: "working",
-        });
         return;
       }
       if (result?.inferred) mergeInferred(result.inferred);
-      runGenerate(prompt);
+      finishThinking();
+      runGenerate(prompt, design);
     } catch {
-      runGenerate(prompt);
+      finishThinking();
+      runGenerate(prompt, design);
     }
   }
 
@@ -131,18 +164,15 @@ export default function Home() {
         return;
       }
     }
+    thoughtStartRef.current = Date.now();
     setMode("workspace");
     setQuestions([]);
     setAnswers({});
     setContext("");
     setGeneratedHtml("");
+    currentContentRef.current = null;
     setStatus("thinking");
     pushMessage({ role: "user", content: prompt.trim() || "Build a landing page" });
-    pushMessage({
-      role: "assistant",
-      content: "Thinking through the page direction...",
-      status: "working",
-    });
     runPlan();
   }
 
@@ -170,41 +200,44 @@ export default function Home() {
       .join("\n\n");
   }
 
+  function buildSummary(ans: Record<string, string>): string {
+    const lines = ["Summary"];
+    for (const q of questions) {
+      const a = ans[q.id];
+      if (a) lines.push(`${q.question}: ${a}`);
+    }
+    return lines.join("\n");
+  }
+
   function submitAnswers(ans: Record<string, string> = answers) {
     const answersText = buildAnswersText(ans);
     const fullPrompt = [prompt, answersText].filter(Boolean).join("\n\n");
+    const summary: ClarifyingAnswer[] = questions
+      .filter((q) => ans[q.id])
+      .map((q) => ({ questionId: q.id, question: q.question, answer: ans[q.id] }));
     setContext(answersText);
     setQuestions([]);
     setActiveQuestion(0);
-    setStatus("generating");
-    pushMessage({
-      role: "assistant",
-      content: "Got it. Building your landing page...",
-      status: "working",
-    });
-    runGenerate(fullPrompt);
+    if (summary.length) {
+      pushMessage({
+        role: "assistant",
+        content: buildSummary(ans),
+        status: "done",
+        kind: "summary",
+      });
+    }
+    runGenerate(fullPrompt, design);
   }
 
   function skipQuestions() {
     setQuestions([]);
     setStatus("generating");
-    pushMessage({
-      role: "assistant",
-      content: "Building your landing page...",
-      status: "working",
-    });
-    runGenerate(prompt);
+    runGenerate(prompt, design);
   }
 
   function handleRegenerate() {
     const fullPrompt = [prompt, context].filter(Boolean).join("\n\n");
-    setStatus("generating");
-    pushMessage({
-      role: "assistant",
-      content: "Regenerating the landing page...",
-      status: "working",
-    });
-    runGenerate(fullPrompt);
+    runGenerate(fullPrompt, design);
   }
 
   function handleFollowUp() {
@@ -215,12 +248,11 @@ export default function Home() {
     const nextContext = [context, text].filter(Boolean).join("\n\n");
     setContext(nextContext);
     setStatus("generating");
-    pushMessage({
-      role: "assistant",
-      content: "Updating the landing page...",
-      status: "working",
-    });
-    runGenerate([prompt, nextContext].filter(Boolean).join("\n\n"));
+    runGenerate(
+      [prompt, nextContext].filter(Boolean).join("\n\n"),
+      design,
+      text
+    );
   }
 
   if (mode === "workspace") {

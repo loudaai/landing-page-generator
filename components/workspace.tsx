@@ -20,16 +20,7 @@ const VIEW_WIDTH: Record<ViewMode, string> = {
   mobile: "390px",
 };
 
-const STATUS_LABEL: Record<GenerationStatus, string> = {
-  idle: "Ready",
-  thinking: "Thinking through the page direction...",
-  asking: "I need a few details before building.",
-  generating: "Writing the landing page copy...",
-  ready: "Ready. You can copy or download the HTML.",
-  error: "Something went wrong. Try again.",
-};
-
-function ThoughtIcon() {
+function Spinner() {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -40,6 +31,41 @@ function ThoughtIcon() {
       strokeLinecap="round"
     >
       <path d="M12 3a9 9 0 1 0 9 9" />
+    </svg>
+  );
+}
+
+function BrainIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-zinc-500" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-1 5 3 3 0 0 0 2 4 3 3 0 0 0 5 1V5a2 2 0 0 0-3-1Z" />
+      <path d="M15 4a3 3 0 0 1 3 3 3 3 0 0 1 1 5 3 3 0 0 1-2 4 3 3 0 0 1-5 1" />
+    </svg>
+  );
+}
+
+function ToolIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-zinc-500" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 7 17 4a3 3 0 0 1 4 4l-7 7-4-4Z" />
+      <path d="M4 20 10 14" />
+    </svg>
+  );
+}
+
+function ListIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-zinc-500" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />
+    </svg>
+  );
+}
+
+function AlertIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-amber-400" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 9v4M12 17h.01" />
+      <path d="M10.3 3.9 2.4 17a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
     </svg>
   );
 }
@@ -80,13 +106,22 @@ export function Workspace({
 
   React.useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-  }, [chat, questions, activeQuestion]);
+  }, [chat, questions, activeQuestion, status]);
 
   const busy = status === "thinking" || status === "generating";
   const activeQuestionObj =
     status === "asking" && activeQuestion < questions.length
       ? questions[activeQuestion]
       : null;
+
+  const liveStatus =
+    status === "thinking"
+      ? "Thinking through the page direction..."
+      : status === "asking"
+        ? "Asking a few questions..."
+        : status === "generating"
+          ? "Generating the landing page..."
+          : null;
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-black text-white">
@@ -109,26 +144,54 @@ export function Workspace({
               return (
                 <div
                   key={msg.id}
-                  className="max-w-[85%] rounded-2xl rounded-bl-sm border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                  className="max-w-[90%] rounded-2xl rounded-bl-sm border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
                 >
                   {msg.content}
                 </div>
               );
             }
-            if (msg.status === "thinking" || msg.status === "working") {
+            if (msg.status === "error") {
               return (
-                <div key={msg.id} className="flex items-center gap-2 text-xs text-zinc-500">
-                  <ThoughtIcon />
-                  <span>Thinking...</span>
+                <div key={msg.id} className="flex items-start gap-2 text-sm text-amber-400">
+                  <AlertIcon />
+                  <span>{msg.content}</span>
                 </div>
               );
             }
+            if (msg.kind === "summary") {
+              return (
+                <div
+                  key={msg.id}
+                  className="rounded-xl border border-white/10 bg-zinc-900/50 px-3 py-2.5 text-xs leading-relaxed text-zinc-300"
+                >
+                  <div className="mb-1.5 font-medium text-zinc-200">Summary</div>
+                  {msg.content
+                    .split("\n")
+                    .slice(1)
+                    .map((line, i) => (
+                      <div key={i} className="text-zinc-400">
+                        {line}
+                      </div>
+                    ))}
+                </div>
+              );
+            }
+            const Icon =
+              msg.kind === "work" ? ToolIcon : msg.kind === "thought" ? BrainIcon : null;
             return (
-              <div key={msg.id} className="text-sm leading-relaxed text-zinc-300">
-                {msg.content}
+              <div key={msg.id} className="flex items-start gap-2 text-sm text-zinc-400">
+                {Icon ? <Icon /> : null}
+                <span>{msg.content}</span>
               </div>
             );
           })}
+
+          {liveStatus ? (
+            <div className="flex items-center gap-2 text-xs text-zinc-500">
+              <Spinner />
+              <span>{liveStatus}</span>
+            </div>
+          ) : null}
 
           {activeQuestionObj ? (
             <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-3">
@@ -159,7 +222,7 @@ export function Workspace({
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium">{projectName || "Untitled"}</span>
             <Badge variant="outline" className="border-white/10 text-zinc-400">
-              {status === "ready" ? "Preview" : STATUS_LABEL[status]}
+              {status === "ready" ? "Preview" : liveStatus ?? "Ready"}
             </Badge>
           </div>
 
@@ -207,7 +270,9 @@ export function Workspace({
               <div className="flex h-full items-center justify-center px-6">
                 <div className="text-center">
                   <div className="mx-auto mb-4 h-9 w-9 animate-spin rounded-full border-2 border-white/15 border-t-white" />
-                  <p className="text-sm text-zinc-400">{STATUS_LABEL[status]}</p>
+                  <p className="text-sm text-zinc-400">
+                    {liveStatus ?? "Preparing your landing page..."}
+                  </p>
                 </div>
               </div>
             )}
