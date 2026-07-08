@@ -88,19 +88,19 @@ export function StartScreen({
 
   return (
     <div className="flex min-h-screen flex-col bg-black">
-      <main className="flex flex-1 items-center justify-center px-6 py-12">
-        <div className="w-full max-w-[720px]">
+      <main className="grid min-h-[100dvh] place-items-center px-5 py-8">
+        <div className="flex w-full max-w-[760px] flex-col items-center translate-y-[-3vh] sm:translate-y-[-5vh]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/por-logo-white.svg"
             alt="p0r by Louda"
-            className="mx-auto mb-6 h-12 w-auto"
+            className="mb-[22px] w-[72px] h-auto sm:mb-7 sm:w-[clamp(76px,7vw,108px)]"
           />
-          <h1 className="text-center text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          <h1 className="text-center text-[32px] font-semibold leading-[1.08] tracking-[-0.04em] text-white sm:text-[clamp(32px,4vw,48px)]">
             What do you want to create?
           </h1>
 
-          <div className="mt-8">
+          <div className="mt-7 w-full sm:mt-9">
             <ChatComposer
               value={prompt}
               onChange={onPromptChange}
