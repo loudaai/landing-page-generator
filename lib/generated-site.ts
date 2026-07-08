@@ -176,10 +176,11 @@ export function heroArtHtml(
   design: LandingPageDesignInput
 ): string {
   const accent = design.accentColor;
+  const enhanced = design.useGeneratedImages ? " art-enhanced" : "";
   const base = `<div class="art-glow"></div><div class="art-grid"></div>`;
 
   if (style === "auto") {
-    return `<div class="hero-art art-auto" aria-hidden="true">${base}
+    return `<div class="hero-art art-auto${enhanced}" aria-hidden="true">${base}
       <div class="art-card art-main">
         <div class="art-head"><span class="art-chip">Vehicle inspection</span><span class="art-status">In progress</span></div>
         <div class="art-checklist">
@@ -196,7 +197,7 @@ export function heroArtHtml(
   }
 
   if (style === "saas") {
-    return `<div class="hero-art art-saas" aria-hidden="true">${base}
+    return `<div class="hero-art art-saas${enhanced}" aria-hidden="true">${base}
       <div class="art-card art-main">
         <div class="art-head"><span class="art-chip">Dashboard</span><span class="art-status">Live</span></div>
         <div class="art-stats">
@@ -213,7 +214,7 @@ export function heroArtHtml(
   }
 
   if (style === "fitness") {
-    return `<div class="hero-art art-fitness" aria-hidden="true">${base}
+    return `<div class="hero-art art-fitness${enhanced}" aria-hidden="true">${base}
       <div class="art-card art-main">
         <div class="art-head"><span class="art-chip">Today's plan</span><span class="art-status">Day 12</span></div>
         <div class="art-gauge"></div>
@@ -229,7 +230,7 @@ export function heroArtHtml(
   }
 
   if (style === "education") {
-    return `<div class="hero-art art-edu" aria-hidden="true">${base}
+    return `<div class="hero-art art-edu${enhanced}" aria-hidden="true">${base}
       <div class="art-card art-main">
         <div class="art-head"><span class="art-chip">Study set</span><span class="art-status">82%</span></div>
         <div class="art-notes">
@@ -247,7 +248,7 @@ export function heroArtHtml(
   }
 
   // default / floating UI cards
-  return `<div class="hero-art" aria-hidden="true">${base}
+  return `<div class="hero-art${enhanced}" aria-hidden="true">${base}
     <div class="art-card art-card--a">
       <span class="art-dot"></span>
       <div class="art-line"></div>
@@ -267,7 +268,8 @@ export function showcaseGraphicHtml(
   style: VisualStyle,
   design: LandingPageDesignInput
 ): string {
-  return `<div class="browser" aria-hidden="true">
+  const enhanced = design.useGeneratedImages ? " art-enhanced" : "";
+  return `<div class="browser${enhanced}" aria-hidden="true">
   <div class="browser-bar"><span></span><span></span><span></span></div>
   <div class="browser-body">
     <div class="bb-row">
@@ -381,6 +383,10 @@ body { overflow-x: hidden; font-family: ui-sans-serif, system-ui, -apple-system,
 .lp .art-gauge { width: 84px; height: 84px; border-radius: 999px; background: conic-gradient(var(--primary) 0 68%, var(--secondary) 68% 100%); -webkit-mask: radial-gradient(circle 26px at center, transparent 98%, #000 100%); mask: radial-gradient(circle 26px at center, transparent 98%, #000 100%); position: relative; }
 .lp .art-notes { display: flex; flex-direction: column; gap: 9px; }
 .lp .art-node { width: 14px; height: 14px; border-radius: 999px; background: var(--accent); flex: none; box-shadow: 0 0 0 4px var(--accent-tint); }
+
+/* Enhanced deterministic graphics when "Generate images" is enabled */
+.lp .hero-art.art-enhanced::after { content: ""; position: absolute; left: 16%; top: 18%; width: 22%; aspect-ratio: 1; border-radius: 999px; background: radial-gradient(circle at 32% 30%, var(--accent), transparent 70%); filter: blur(5px); opacity: 0.55; }
+.lp .browser.art-enhanced { box-shadow: 0 24px 70px -18px var(--tint-strong), var(--shadow); }
 
 /* Default hero art card placement */
 .lp .art-main { left: 12%; top: 14%; right: 12%; width: auto; }
