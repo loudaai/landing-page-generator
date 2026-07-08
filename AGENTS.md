@@ -2,29 +2,33 @@
 
 ## Project Overview
 
-This project is a same-day, no-cost MVP called **AI Landing Page Website Generator**.
+This project is a same-day, no-cost MVP called **p0r by Louda**.
 
-The app lets a user describe a business, product, service, personal brand, startup idea, student project, or local business. It then uses AI to generate structured landing page content and turns that content into a polished one-page website preview.
+Tagline: **Build Landing Page with AI**
 
-The final output should be a complete standalone `index.html` file that the user can copy or download.
+The app lets a user describe a business, product, service, startup idea, personal brand, student project, freelancer offer, or local business. It uses AI to generate structured landing page content and turns that content into a polished one-page website preview with deterministic graphics, then exports a complete standalone `index.html`.
+
+The final output is a complete standalone `index.html` the user can copy or download and open directly in a browser.
 
 This is not a full website builder.
 This is not a SaaS dashboard.
 This is not a drag-and-drop editor.
-This is a focused AI tool for quickly generating a simple one-page landing page.
 
 ## Main Goal
 
 Build a clean, working, deployed MVP that can be shared today.
 
-The final MVP must allow the user to:
+The MVP must let the user:
 
 1. Fill out a short form about a business or idea.
-2. Generate structured landing page content using OpenRouter.
-3. Preview the generated landing page.
-4. Copy the generated HTML.
-5. Download the website as `index.html`.
-6. Open the downloaded file directly in a browser.
+2. Optionally upload a logo (client-side only).
+3. Choose 3 brand colors and a light/dark generated-site theme.
+4. Optionally provide up to 3 photo URLs.
+5. Generate structured landing page content using OpenRouter.
+6. Preview the generated landing page with deterministic graphics.
+7. Copy the generated HTML.
+8. Download the website as `index.html`.
+9. Open the downloaded file directly in a browser.
 
 ## Tech Stack
 
@@ -38,7 +42,7 @@ Use:
 * HY3/free OpenRouter model if available
 * Vercel free tier
 
-Use free tools and free tiers only.
+Free tools and free tiers only.
 
 Avoid:
 
@@ -48,6 +52,7 @@ Avoid:
 * Paid UI kits
 * Paid assets
 * Paid hosting
+* AI image generation
 
 ## Hard Scope Rules
 
@@ -65,71 +70,56 @@ Do not build:
 * Team accounts
 * Complex template systems
 * Multiple unnecessary pages
-* Image generation
-* Logo upload
 * Section-by-section editor
 * Full website builder functionality
+* AI image generation
+* External image APIs (Unsplash, Pexels, etc.)
+* Logo storage or upload to a server
 
 The priority is a working deployed product, not a large feature set.
 
 ## Product Principle
 
-The AI should generate **structured content only**.
+The AI generates **structured content only**.
 
 Do not ask the AI to generate:
 
 * React components
 * Next.js pages
-* Random HTML layouts
-* Tailwind code
-* Full app code
-* External scripts
+* Raw HTML
+* CSS
+* Random layouts
+* External image URLs
+* Image API calls
 
-The app should own:
+The app owns:
 
 * Layout
 * Styling
 * Preview rendering
 * HTML export
+* Logo rendering (data URL)
+* Color system
+* Theme system
+* Deterministic graphics
 * Copy behavior
 * Download behavior
 
-The correct pipeline is:
+Pipeline:
 
 ```txt
-User form input
-→ Server-side OpenRouter call
+User form + design input
+→ Server-side OpenRouter call (text only)
 → Structured JSON content
 → Parse and normalize response
-→ Render React preview
+→ Render React preview (with logo, colors, theme, graphics)
 → Generate standalone HTML string
 → Copy or download index.html
 ```
 
-## Required User Flow
-
-The app should work like this:
-
-1. User opens the app.
-2. User sees a clean dark interface.
-3. User fills out a short form.
-4. User clicks generate.
-5. Client sends the form data to a local server endpoint.
-6. Server calls OpenRouter using the server-side API key.
-7. AI returns structured JSON.
-8. Server parses and normalizes the response.
-9. Client receives the structured landing page content.
-10. App renders a polished landing page preview.
-11. App generates a standalone HTML string from the same content.
-12. User can copy the HTML.
-13. User can download `index.html`.
-14. User can edit the form and generate again.
-
 ## Required Form Fields
 
-The form should stay short.
-
-Use these fields:
+Short form:
 
 * Business/product name
 * What it does
@@ -141,20 +131,32 @@ Use these fields:
 * Optional offer/pricing
 * Optional contact info
 
-Tone options:
+Tone options: Clear and practical, Friendly and casual, Professional and direct, Premium but not hypey, Student project style, Local business style.
 
-* Clear and practical
-* Friendly and casual
-* Professional and direct
-* Premium but not hypey
-* Student project style
-* Local business style
+## Design Input
 
-Do not add more fields unless they clearly improve generation quality and do not slow down the MVP.
+```ts
+type LandingPageDesignInput = {
+  logoDataUrl?: string
+  primaryColor: string
+  secondaryColor: string
+  accentColor: string
+  siteTheme: "dark" | "light"
+  photoUrls: string[]
+  useLogoPalette: boolean
+}
+```
+
+Rules:
+
+* Logo upload is client-side only; converted to a data URL; never sent to a server.
+* 3 manual brand colors (primary, secondary, accent) affect the generated site.
+* Theme (dark/light) controls only the generated site, not the builder app UI.
+* Up to 3 optional photo URLs. Invalid URLs must not crash the app.
+* Optional logo palette extraction: sample the uploaded logo on a canvas, extract up to 3 colors, let the user override manually. Fail gracefully.
+* If no photo URLs are provided, show deterministic generated graphics instead.
 
 ## Required AI Output Shape
-
-Use this structured content type:
 
 ```ts
 export type LandingPageContent = {
@@ -180,56 +182,20 @@ export type LandingPageContent = {
   pricingOrOffer: string
   contactText: string
   footerText: string
+  imageSuggestions?: string[]
+  photoKeywords?: string[]
 }
 ```
 
-The AI should return JSON only.
-
-No markdown.
-No code fences.
-No explanations.
-No HTML.
-No React.
+The AI returns JSON only. No markdown, code fences, explanations, HTML, or React. `imageSuggestions`/`photoKeywords` are optional and must NOT be used to fetch images.
 
 ## AI Copywriting Rules
 
-Generated copy should be:
-
-* Specific
-* Practical
-* Clear
-* Useful
-* Simple
-* Relevant to the user input
-* Non-hypey
-
-Avoid these words and phrases:
-
-* innovative
-* revolutionary
-* game-changing
-* next-level
-* seamless
-* cutting-edge
-* world-class
-* powerful solution
-* transform your business
-* unlock your potential
-
-Do not invent:
-
-* Fake testimonials
-* Fake awards
-* Fake numbers
-* Fake case studies
-* Unrealistic guarantees
-* Claims not supported by the user input
+Specific, practical, clear, useful, simple, relevant, non-hypey. Avoid: innovative, revolutionary, game-changing, next-level, seamless, cutting-edge, world-class, powerful solution, transform your business, unlock your potential. Do not invent fake testimonials, awards, numbers, case studies, guarantees.
 
 ## OpenRouter Rules
 
-OpenRouter must only be called from server-side code.
-
-Use:
+Server-side only.
 
 ```env
 OPENROUTER_API_KEY=
@@ -237,328 +203,109 @@ OPENROUTER_MODEL=tencent/hy3:free
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-Rules:
+* Never expose the API key to the client.
+* No `NEXT_PUBLIC_OPENROUTER_API_KEY`.
+* Client calls a local server endpoint; server calls OpenRouter.
+* Model configurable via `OPENROUTER_MODEL`; default `tencent/hy3:free`.
+* No image generation calls; no other providers.
 
-* Never expose the OpenRouter API key to the client.
-* Do not use `NEXT_PUBLIC_OPENROUTER_API_KEY`.
-* Client components must not call OpenRouter directly.
-* Client should call a local server endpoint.
-* Server endpoint should call OpenRouter.
-* Model should be configurable through `OPENROUTER_MODEL`.
-* Default model can be `tencent/hy3:free`.
-* If HY3 is unavailable or rate-limited, switch the model through the env variable instead of changing the app architecture.
+## Parsing and Normalization
 
-## Prompting Rules for AI Generation
+Implement `parseAiJson`, `normalizeLandingPageContent`, `ensureStringArray`, `ensureFeatureArray`, `ensureFaqArray`. Normalize missing fields, keep arrays safe, prevent preview crashes on partial output.
 
-Use a strong system prompt that tells the model:
+## Deterministic Graphics
 
-* Return JSON only.
-* Do not use markdown.
-* Do not use code fences.
-* Do not output HTML.
-* Do not output React.
-* Generate landing page copy only.
-* Be clear and specific.
-* Avoid generic startup hype.
-* Avoid banned buzzwords.
-* Do not invent false claims.
+Generated site includes built-in graphics created with CSS, inline SVG, HTML, gradients, borders, shadows, and pseudo-layouts. No external dependencies.
 
-The user prompt should include:
+Use: abstract hero visual, gradient mesh/card, orb/glow shapes, monochrome grid background, product-style mock card, feature cards with icon-like shapes, decorative SVG lines, simple geometric blocks, branded visual panel using selected colors.
 
-* Business/product name
-* What it does
-* Target audience
-* Main problem
-* Main benefit
-* Tone
-* CTA
-* Optional offer/pricing
-* Optional contact info
-
-The output must match `LandingPageContent`.
-
-## Parsing and Normalization Rules
-
-Do not trust AI output blindly.
-
-Implement parsing and normalization.
-
-Required behavior:
-
-* Strip markdown code fences if returned.
-* Trim whitespace.
-* Parse JSON safely.
-* Return a readable error if parsing fails.
-* Normalize missing fields.
-* Ensure `benefits` is an array.
-* Ensure `features` is an array of objects with `title` and `description`.
-* Ensure `faqs` is an array of objects with `question` and `answer`.
-* Prevent the preview from crashing because of malformed AI output.
-
-Useful helpers:
-
-```ts
-parseAiJson(raw: string)
-normalizeLandingPageContent(value: unknown): LandingPageContent
-ensureStringArray(value: unknown, count: number): string[]
-ensureFeatureArray(value: unknown, count: number)
-ensureFaqArray(value: unknown, count: number)
-```
+Graphics adapt to primary/secondary/accent colors, light/dark theme, optional logo, and optional photo URLs. If photo URLs are provided, show them; otherwise show deterministic graphics.
 
 ## HTML Export Rules
 
-The exported website must be:
+Exported website must be: complete HTML document, single file `index.html`, responsive, styled with embedded CSS, usable opened directly in a browser, free of external scripts/CSS/frameworks/required images.
 
-* A complete HTML document
-* A single file
-* Named `index.html`
-* Responsive
-* Dark monochrome
-* Styled with embedded CSS
-* Usable when opened directly in a browser
-* Free of external dependencies
-* Free of external scripts
-* Free of external CSS frameworks
-* Free of required images
-
-Implement:
-
-```ts
-generateStandaloneHtml(content: LandingPageContent): string
-```
-
-Also implement:
-
-```ts
-escapeHtml(value: string): string
-downloadHtmlFile(content: LandingPageContent): void
-copyHtmlToClipboard(content: LandingPageContent): Promise<void>
-```
-
-Security rule:
-
-All user and AI-generated content must be escaped before being injected into the standalone HTML string.
-
-Do not render raw AI HTML.
-
-Do not use `dangerouslySetInnerHTML` for the app preview.
+`generateStandaloneHtml(content, design): string` supports logo data URL, selected colors, light/dark theme, optional photo URLs, and deterministic graphics. All user/AI content escaped via `escapeHtml`. No raw AI HTML. No `dangerouslySetInnerHTML` for the app preview.
 
 ## Preview Rules
 
-The app preview should be rendered with React components using the structured content.
-
-The preview should include:
-
-* Hero section
-* Tagline
-* Hero headline
-* Hero subheadline
-* Primary CTA
-* Secondary CTA
-* Problem section
-* Solution section
-* Benefits
-* Features
-* FAQ
-* Pricing/contact CTA section
-* Footer
-
-The preview should look polished but simple.
-
-Do not use an iframe unless necessary. A React preview is enough for the MVP.
+React preview using structured content + design. Includes header with logo if provided, hero with abstract graphic or photo, CTA buttons, problem, solution, benefits, features, visual/graphics section, optional photo grid, FAQ, offer/contact CTA, footer. Polished, modern, screenshot-friendly.
 
 ## UI Design Rules
 
-Use shadcn/ui where useful.
+shadcn/ui components: Button, Input, Textarea, Select, Card, Badge, Separator, Skeleton (Sonner optional).
 
-Use only the required components:
-
-* Button
-* Input
-* Textarea
-* Select
-* Card
-* Badge
-* Separator
-* Skeleton
-
-Optional:
-
-* Toast or Sonner, only if already easy to add
-
-Design direction:
-
-* Dark mode first
-* Monochrome only
-* Black
-* Zinc
-* Neutral
-* White
-* Gray borders
-* Minimal
-* Clean
-* Professional
-* Screenshot-friendly
-
-Avoid:
-
-* Bright colors
-* Complex animations
-* Sidebar
-* Dashboard layout
-* Login screen
-* Marketing bloat
-* Extra pages
-
-Preferred layout:
-
-* Centered max-width container
-* Simple header
-* Short product explanation
-* Form inside a clean card
-* Generated website preview inside another card
-* Copy HTML button
-* Download `index.html` button
-* Example presets
-* Small footer
+Builder app: dark, mostly monochrome, minimal, crisp, spacious, strong typography, clean cards, clear hierarchy, v0-style. Brand colors affect the generated site, not the builder UI.
 
 ## State Requirements
 
-The app should handle:
-
-* Empty state before generation
-* Form validation error
-* Loading state while generating
-* API error state
-* JSON parsing error state
-* Generated preview state
-* Copied state after copying HTML
-* Disabled export buttons before content exists
-
-Keep state simple.
-
-Do not add global state management.
+Empty state, validation errors, loading state (disable Generate, show preview skeleton + "Generating landing page...", optional staged labels), API error, JSON parse error, generated preview, copied state, disabled export before content exists. Keep state simple, no global store.
 
 ## Example Presets
 
-Add a few presets for demo and testing:
-
-* Local coffee shop
-* Freelance web design service
-* Student study app
-* Beginner fitness tracker
-
-Presets should fill the form instantly and remain editable.
-
-Do not add images or external assets.
+Local coffee shop, Freelance web design service, Student study app, Beginner fitness tracker. Fill the form instantly, remain editable.
 
 ## Build Order
 
-Follow this order:
-
-1. Inspect current project state.
-2. Confirm installed dependencies.
-3. Set up or verify Tailwind CSS.
-4. Set up or verify shadcn/ui.
-5. Build the dark monochrome UI shell.
-6. Add the form and validation.
-7. Add example presets.
-8. Add `LandingPageContent` and `LandingPageFormInput` types.
-9. Add a sample `LandingPageContent` object.
-10. Build the `LandingPagePreview` component using sample content.
-11. Build `generateStandaloneHtml()`.
-12. Add `escapeHtml()`.
-13. Add Copy HTML behavior.
-14. Add Download `index.html` behavior.
-15. Create server-side OpenRouter generation endpoint.
-16. Add system prompt and user prompt builder.
-17. Parse and normalize the AI response.
-18. Connect the Generate button to the endpoint.
-19. Add loading and error states.
-20. Polish the UI.
-21. Run the production build.
-22. Fix TypeScript, lint, and build errors.
-23. Prepare for Vercel deployment.
-
-Do not start with AI integration. Build the UI, preview, and export flow with sample data first. Then connect OpenRouter.
+1. Update AGENTS.md.
+2. Update visible branding (p0r by Louda / Build Landing Page with AI).
+3. Update package/app metadata.
+4. Add design input fields (logo, palette toggle, 3 colors, theme, up to 3 photo URLs).
+5. Logo-to-data-URL handling.
+6. Simple logo palette extraction if safe.
+7. Update preview for logo, colors, theme, photos, deterministic graphics.
+8. Update generateStandaloneHtml for design + graphics.
+9. Improve generated site design.
+10. Improve loading state.
+11. Improve app UI to clean v0-style.
+12. Run build, fix errors.
+13. Commit and push.
 
 ## Acceptance Criteria
 
-The MVP is complete when:
-
-* App runs locally.
-* User can fill out the form.
-* User can use example presets.
-* User can generate landing page content through OpenRouter.
-* OpenRouter is called from server-side code only.
-* API key is never exposed to the client.
-* Generated content renders in a polished preview.
-* User can copy the generated HTML.
-* User can download `index.html`.
-* Downloaded `index.html` opens directly in a browser.
-* Exported HTML is responsive.
-* Exported HTML uses embedded CSS.
-* UI is dark, monochrome, minimal, and screenshot-friendly.
-* App is ready for Vercel deployment.
-* No auth, database, dashboard, payments, or drag-and-drop editor exists.
+* AGENTS.md updated.
+* Branding says p0r by Louda; tagline Build Landing Page with AI.
+* Optional logo upload; logo in preview and embedded in index.html.
+* Manual 3 brand colors.
+* Optional logo palette extraction works or fails gracefully.
+* Light/dark generated-site theme.
+* Preview and export reflect colors and theme.
+* Up to 3 optional photo URLs render if provided.
+* Deterministic graphics when no photos.
+* Generated site more polished than before.
+* Copy/Download still work; file opens in browser.
+* OpenRouter text generation still works.
+* `npm run build` passes.
+* No secrets committed. No auth/db/dashboard/payments.
 
 ## Manual Test Checklist
 
-Before deployment, verify:
-
-```txt
 [ ] App opens locally
-[ ] Main page is dark and monochrome
-[ ] Form fields work
-[ ] Required field validation works
+[ ] Branding shows p0r by Louda / Build Landing Page with AI
+[ ] Form fields and validation work
 [ ] Presets fill the form
-[ ] Generate button shows loading state
+[ ] Logo upload shows in preview
+[ ] Logo embedded in downloaded index.html
+[ ] 3 color controls change preview + export
+[ ] Logo palette extraction works/fails gracefully
+[ ] Theme dark/light switches generated site
+[ ] Up to 3 photo URLs render; bad URLs don't crash
+[ ] No photos → deterministic graphics render
+[ ] Generate shows loading skeleton + text
 [ ] API errors show readable messages
 [ ] AI output renders in preview
-[ ] Preview does not crash with partial output
 [ ] Copy HTML works
-[ ] Download index.html works
-[ ] Downloaded file opens in browser
-[ ] Downloaded file is responsive
-[ ] No OpenRouter key appears in client code
-[ ] No auth exists
-[ ] No database exists
-[ ] No dashboard exists
-[ ] No payments exist
+[ ] Download index.html works and opens in browser
+[ ] Responsive
+[ ] No OpenRouter key in client code
 [ ] Production build passes
-```
 
 ## Vercel Deployment Notes
 
-Before deploying:
-
-* Push project to GitHub.
-* Import project into Vercel.
-* Add environment variables:
-
-  * `OPENROUTER_API_KEY`
-  * `OPENROUTER_MODEL`
-  * `NEXT_PUBLIC_SITE_URL`
-* Redeploy after adding environment variables.
-* Test generation on the deployed URL.
-* Download `index.html` from deployed app.
-* Open downloaded file locally.
-* Take screenshot for sharing.
+Push to GitHub, import into Vercel, add env vars (OPENROUTER_API_KEY, OPENROUTER_MODEL, NEXT_PUBLIC_SITE_URL), redeploy, test generation, download index.html, open locally, screenshot.
 
 ## Development Philosophy
 
-Keep the app small.
+Keep the app small. Prefer boring, reliable code. Prioritize working generation, preview, export, deployment, clean UI. Do not overbuild.
 
-Prefer boring, reliable code over clever abstractions.
-
-Prioritize:
-
-1. Working generation
-2. Working preview
-3. Working export
-4. Working deployment
-5. Clean UI
-
-Do not overbuild.
-
-The goal is to ship a useful AI tool today, not design a full platform.
+Goal: ship a useful AI tool today, not a full platform.

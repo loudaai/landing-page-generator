@@ -6,15 +6,34 @@ import { GeneratorForm } from "@/components/generator-form";
 import { LandingPreview } from "@/components/landing-preview";
 import { ExportActions } from "@/components/export-actions";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { SAMPLE_LANDING_PAGE } from "@/lib/sample-content";
-import type { LandingPageContent, LandingPageFormInput } from "@/lib/types";
+import {
+  DEFAULT_DESIGN,
+  type LandingPageContent,
+  type LandingPageDesignInput,
+  type LandingPageFormInput,
+} from "@/lib/types";
+
+const STAGES = ["Writing copy", "Structuring sections", "Preparing preview"];
 
 export function GeneratorWorkspace() {
   const [content, setContent] = React.useState<LandingPageContent>(
     SAMPLE_LANDING_PAGE
   );
+  const [design, setDesign] = React.useState<LandingPageDesignInput>(DEFAULT_DESIGN);
   const [loading, setLoading] = React.useState(false);
+  const [stage, setStage] = React.useState(0);
   const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!loading) return;
+    setStage(0);
+    const interval = window.setInterval(() => {
+      setStage((s) => (s + 1) % STAGES.length);
+    }, 1200);
+    return () => window.clearInterval(interval);
+  }, [loading]);
 
   async function handleGenerate(input: LandingPageFormInput) {
     setLoading(true);
@@ -50,7 +69,12 @@ export function GeneratorWorkspace() {
             Describe your business or idea, then preview the generated page.
           </p>
         </div>
-        <GeneratorForm onGenerate={handleGenerate} loading={loading} />
+        <GeneratorForm
+          design={design}
+          onDesignChange={setDesign}
+          onGenerate={handleGenerate}
+          loading={loading}
+        />
       </section>
 
       <section className="flex flex-col gap-4">
@@ -62,10 +86,27 @@ export function GeneratorWorkspace() {
         </div>
         <Card className="p-0">
           <CardContent className="p-3">
-            <LandingPreview content={content} />
+            {loading ? (
+              <div className="flex flex-col gap-4 p-6">
+                <Skeleton className="h-6 w-1/3" />
+                <Skeleton className="h-10 w-2/3" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                </div>
+                <p className="pt-2 text-center text-sm text-muted-foreground">
+                  Generating landing page
+                  <span className="text-foreground"> · {STAGES[stage]}</span>
+                </p>
+              </div>
+            ) : (
+              <LandingPreview content={content} design={design} />
+            )}
           </CardContent>
         </Card>
-        <ExportActions content={content} />
+        <ExportActions content={content} design={design} />
         {error ? (
           <p className="text-sm text-destructive">{error}</p>
         ) : null}

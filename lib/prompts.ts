@@ -19,13 +19,16 @@ export function buildSystemPrompt(): string {
   "faqs": { "question": string, "answer": string }[],
   "pricingOrOffer": string,
   "contactText": string,
-  "footerText": string
+  "footerText": string,
+  "imageSuggestions": string[],
+  "photoKeywords": string[]
 }
 
 Copywriting rules:
 - Be clear, specific, practical, and directly relevant to the user input.
 - Keep copy simple and useful. Do not invent fake testimonials, awards, statistics, case studies, or guarantees.
 - Avoid hype words: innovative, revolutionary, game-changing, next-level, seamless, cutting-edge, world-class, powerful solution, transform your business, unlock your potential.
+- imageSuggestions and photoKeywords are optional and only for inspiration. Do NOT use them to fetch or generate images.
 - Write copy only. Respond with a single JSON object and nothing else.`;
 }
 

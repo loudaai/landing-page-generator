@@ -80,5 +80,7 @@ export function normalizeLandingPageContent(value: unknown): LandingPageContent 
     pricingOrOffer: asString(obj.pricingOrOffer),
     contactText: asString(obj.contactText),
     footerText: asString(obj.footerText),
+    imageSuggestions: ensureStringArray(obj.imageSuggestions),
+    photoKeywords: ensureStringArray(obj.photoKeywords),
   };
 }

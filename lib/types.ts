@@ -44,6 +44,30 @@ export type LandingPageContent = {
   pricingOrOffer: string;
   contactText: string;
   footerText: string;
+  imageSuggestions?: string[];
+  photoKeywords?: string[];
+};
+
+export type SiteTheme = "dark" | "light";
+
+export type LandingPageDesignInput = {
+  logoDataUrl?: string;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  siteTheme: SiteTheme;
+  photoUrls: string[];
+  useLogoPalette: boolean;
+};
+
+export const DEFAULT_DESIGN: LandingPageDesignInput = {
+  logoDataUrl: undefined,
+  primaryColor: "#e5e5e5",
+  secondaryColor: "#3f3f46",
+  accentColor: "#a1a1aa",
+  siteTheme: "dark",
+  photoUrls: [],
+  useLogoPalette: false,
 };
 
 export const EMPTY_FORM_INPUT: LandingPageFormInput = {

@@ -1,181 +1,207 @@
-import type { LandingPageContent } from "@/lib/types";
+import type { CSSProperties } from "react";
 
-function Section({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+import { GENERATED_SITE_CSS, themeVars } from "@/lib/generated-site";
+import type {
+  LandingPageContent,
+  LandingPageDesignInput,
+  SiteTheme,
+} from "@/lib/types";
+
+function FeatureIcon({ design, index }: { design: LandingPageDesignInput; index: number }) {
+  const shapes = ["circle", "square", "triangle", "diamond"];
+  const shape = shapes[index % shapes.length];
+  const stroke = design.accentColor;
+  const common = {
+    fill: "none",
+    stroke,
+    strokeWidth: 2,
+  } as const;
+  let shapeSvg: React.ReactNode;
+  if (shape === "circle") {
+    shapeSvg = <circle cx={16} cy={16} r={11} {...common} />;
+  } else if (shape === "square") {
+    shapeSvg = <rect x={6} y={6} width={20} height={20} rx={5} {...common} />;
+  } else if (shape === "triangle") {
+    shapeSvg = <path d="M16 5 L27 25 L5 25 Z" strokeLinejoin="round" {...common} />;
+  } else {
+    shapeSvg = <path d="M16 4 L28 16 L16 28 L4 16 Z" strokeLinejoin="round" {...common} />;
+  }
   return (
-    <section
-      className={`border-b border-zinc-800 px-6 py-10 sm:px-8 ${className ?? ""}`}
-    >
-      {children}
-    </section>
+    <svg className="ico" viewBox="0 0 32 32" aria-hidden="true">
+      {shapeSvg}
+    </svg>
   );
 }
 
-export function LandingPreview({ content }: { content: LandingPageContent }) {
+function HeroOrPhoto({ design }: { design: LandingPageDesignInput }) {
+  const photo = design.photoUrls.find((p) => p.trim() !== "");
+  if (photo) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={photo}
+        alt=""
+        className="hero-visual"
+        style={{ objectFit: "cover" }}
+      />
+    );
+  }
+  return <div className="hero-visual">
+    <div className="mock">
+      <div className="line" />
+      <div className="line short" />
+      <div className="bar" />
+    </div>
+  </div>;
+}
+
+export function LandingPreview({
+  content,
+  design,
+}: {
+  content: LandingPageContent;
+  design: LandingPageDesignInput;
+}) {
+  const style = themeVars(design) as CSSProperties;
+  const photos = design.photoUrls.filter((p) => p.trim() !== "");
+  const secondPhoto = design.photoUrls[1]?.trim() || design.photoUrls[2]?.trim() || "";
+
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-100">
-      {/* Hero */}
-      <section className="flex flex-col items-center gap-5 px-6 py-12 text-center sm:px-8">
-        <span className="text-xs font-medium uppercase tracking-[0.2em] text-zinc-400">
-          {content.brandName}
-        </span>
-        {content.tagline ? (
-          <span className="text-sm text-zinc-400">{content.tagline}</span>
-        ) : null}
-        <h1 className="max-w-2xl text-3xl font-semibold leading-tight tracking-tight text-white sm:text-4xl">
-          {content.heroHeadline}
-        </h1>
-        {content.heroSubheadline ? (
-          <p className="max-w-xl text-base leading-relaxed text-zinc-400">
-            {content.heroSubheadline}
-          </p>
-        ) : null}
-        <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
-          {content.primaryCTA ? (
-            <span className="inline-flex h-10 items-center justify-center rounded-lg bg-white px-5 text-sm font-medium text-zinc-950">
-              {content.primaryCTA}
-            </span>
+    <div className="lp" style={style}>
+      <style>{GENERATED_SITE_CSS}</style>
+      <header className="site">
+        {design.logoDataUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="logo" src={design.logoDataUrl} alt="Logo" />
+        ) : (
+          <span className="brand">{content.brandName}</span>
+        )}
+        <span className="brand">{content.brandName}</span>
+      </header>
+
+      <section className="hero">
+        <div>
+          {content.tagline ? <div className="tagline">{content.tagline}</div> : null}
+          <h1>{content.heroHeadline}</h1>
+          {content.heroSubheadline ? (
+            <p className="sub">{content.heroSubheadline}</p>
           ) : null}
-          {content.secondaryCTA ? (
-            <span className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-700 px-5 text-sm font-medium text-zinc-200">
-              {content.secondaryCTA}
-            </span>
-          ) : null}
+          <div className="cta">
+            {content.primaryCTA ? (
+              <span className="btn btn-primary">{content.primaryCTA}</span>
+            ) : null}
+            {content.secondaryCTA ? (
+              <span className="btn btn-secondary">{content.secondaryCTA}</span>
+            ) : null}
+          </div>
+        </div>
+        <HeroOrPhoto design={design} />
+      </section>
+
+      <section className="block">
+        <h2>{content.problemTitle}</h2>
+        <p>{content.problemDescription}</p>
+      </section>
+
+      <section className="block">
+        <h2>{content.solutionTitle}</h2>
+        <p>{content.solutionDescription}</p>
+      </section>
+
+      {content.benefits.length > 0 ? (
+        <section className="block">
+          <h2>Why it helps</h2>
+          <ul className="benefits">
+            {content.benefits.map((benefit, i) => (
+              <li key={i}>{benefit}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {content.features.length > 0 ? (
+        <section className="block">
+          <h2>What you get</h2>
+          <div className="features">
+            {content.features.map((feature, i) => (
+              <div className="feature" key={i}>
+                <FeatureIcon design={design} index={i} />
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <section className="block">
+        <h2>A closer look</h2>
+        <div className="graphics">
+          <div className="visual-panel">
+            <div className="inner">
+              <div className="head" />
+              <div className="blocks">
+                <div className="block" />
+                <div className="block" />
+                <div className="block" />
+              </div>
+              <div className="head" style={{ width: "60%" }} />
+            </div>
+          </div>
+          {secondPhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="panel-photo" src={secondPhoto} alt="" style={{ objectFit: "cover" }} />
+          ) : (
+            <div className="panel-photo" />
+          )}
         </div>
       </section>
 
-      {/* Problem */}
-      <Section>
-        <div className="mx-auto flex max-w-2xl flex-col gap-3">
-          <h2 className="text-xl font-semibold text-white">
-            {content.problemTitle}
-          </h2>
-          {content.problemDescription ? (
-            <p className="text-sm leading-relaxed text-zinc-400">
-              {content.problemDescription}
-            </p>
-          ) : null}
-        </div>
-      </Section>
-
-      {/* Solution */}
-      <Section>
-        <div className="mx-auto flex max-w-2xl flex-col gap-3">
-          <h2 className="text-xl font-semibold text-white">
-            {content.solutionTitle}
-          </h2>
-          {content.solutionDescription ? (
-            <p className="text-sm leading-relaxed text-zinc-400">
-              {content.solutionDescription}
-            </p>
-          ) : null}
-        </div>
-      </Section>
-
-      {/* Benefits */}
-      {content.benefits.length > 0 ? (
-        <Section>
-          <div className="mx-auto flex max-w-2xl flex-col gap-4">
-            <h2 className="text-xl font-semibold text-white">Why it helps</h2>
-            <ul className="flex flex-col gap-2">
-              {content.benefits.map((benefit, i) => (
-                <li
-                  key={i}
-                  className="flex items-start gap-3 text-sm text-zinc-300"
-                >
-                  <span className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400" />
-                  <span>{benefit}</span>
-                </li>
-              ))}
-            </ul>
+      {photos.length > 0 ? (
+        <section className="block">
+          <h2>Gallery</h2>
+          <div className="photos">
+            {photos.map((url, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={i} src={url} alt="" />
+            ))}
           </div>
-        </Section>
+        </section>
       ) : null}
 
-      {/* Features */}
-      {content.features.length > 0 ? (
-        <Section>
-          <div className="mx-auto flex max-w-3xl flex-col gap-5">
-            <h2 className="text-xl font-semibold text-white">What you get</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {content.features.map((feature, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col gap-2 rounded-lg border border-zinc-800 bg-zinc-900/40 p-4"
-                >
-                  <h3 className="text-sm font-medium text-white">
-                    {feature.title}
-                  </h3>
-                  {feature.description ? (
-                    <p className="text-sm leading-relaxed text-zinc-400">
-                      {feature.description}
-                    </p>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          </div>
-        </Section>
-      ) : null}
-
-      {/* FAQ */}
       {content.faqs.length > 0 ? (
-        <Section>
-          <div className="mx-auto flex max-w-2xl flex-col gap-4">
-            <h2 className="text-xl font-semibold text-white">FAQ</h2>
-            <div className="flex flex-col divide-y divide-zinc-800">
-              {content.faqs.map((faq, i) => (
-                <div key={i} className="flex flex-col gap-1 py-3">
-                  <h3 className="text-sm font-medium text-zinc-100">
-                    {faq.question}
-                  </h3>
-                  {faq.answer ? (
-                    <p className="text-sm leading-relaxed text-zinc-400">
-                      {faq.answer}
-                    </p>
-                  ) : null}
-                </div>
-              ))}
-            </div>
+        <section className="block">
+          <h2>FAQ</h2>
+          <div className="faqs">
+            {content.faqs.map((faq, i) => (
+              <div className="faq" key={i}>
+                <h3>{faq.question}</h3>
+                <p>{faq.answer}</p>
+              </div>
+            ))}
           </div>
-        </Section>
+        </section>
       ) : null}
 
-      {/* Pricing / offer */}
       {content.pricingOrOffer ? (
-        <Section>
-          <div className="mx-auto flex max-w-2xl flex-col gap-2 rounded-lg border border-zinc-800 bg-zinc-900/40 p-5">
-            <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-400">
-              Offer
-            </h2>
-            <p className="text-sm leading-relaxed text-zinc-200">
-              {content.pricingOrOffer}
-            </p>
+        <section className="block">
+          <div className="offer">
+            <div className="label">Offer</div>
+            <p>{content.pricingOrOffer}</p>
           </div>
-        </Section>
+        </section>
       ) : null}
 
-      {/* Contact */}
       {content.contactText ? (
-        <Section>
-          <div className="mx-auto flex max-w-2xl flex-col gap-1">
-            <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-400">
-              Contact
-            </h2>
-            <p className="text-sm text-zinc-300">{content.contactText}</p>
+        <section className="block">
+          <div className="contact">
+            <div className="label">Contact</div>
+            <p>{content.contactText}</p>
           </div>
-        </Section>
+        </section>
       ) : null}
 
-      {/* Footer */}
-      <footer className="px-6 py-6 text-center text-xs text-zinc-500 sm:px-8">
-        {content.footerText}
-      </footer>
+      <footer className="site">{content.footerText}</footer>
     </div>
   );
 }

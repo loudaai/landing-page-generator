@@ -20,13 +20,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 import {
   EMPTY_FORM_INPUT,
   TONES,
+  type LandingPageDesignInput,
   type LandingPageFormInput,
 } from "@/lib/types";
 import { PRESETS } from "@/lib/presets";
+import { fileToDataUrl, extractPalette } from "@/lib/logo";
 import {
   hasErrors,
   validateLandingPageForm,
@@ -62,15 +65,50 @@ function Field({
   );
 }
 
+function ColorField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <label className="text-sm text-foreground">{label}</label>
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          value={value}
+          aria-label={label}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-8 w-8 cursor-pointer rounded-md border border-border bg-transparent p-0"
+        />
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-28"
+        />
+      </div>
+    </div>
+  );
+}
+
 export function GeneratorForm({
+  design,
+  onDesignChange,
   onGenerate,
   loading = false,
 }: {
+  design: LandingPageDesignInput;
+  onDesignChange: (design: LandingPageDesignInput) => void;
   onGenerate: (input: LandingPageFormInput) => void;
   loading?: boolean;
 }) {
   const [form, setForm] = React.useState<LandingPageFormInput>(EMPTY_FORM_INPUT);
   const [errors, setErrors] = React.useState<FormErrors>({});
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   function update<K extends keyof LandingPageFormInput>(
     key: K,
@@ -85,9 +123,61 @@ export function GeneratorForm({
     });
   }
 
+  function patchDesign(patch: Partial<LandingPageDesignInput>) {
+    onDesignChange({ ...design, ...patch });
+  }
+
   function applyPreset(input: LandingPageFormInput) {
     setForm(input);
     setErrors({});
+  }
+
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const next: LandingPageDesignInput = { ...design, logoDataUrl: dataUrl };
+      if (design.useLogoPalette) {
+        try {
+          const palette = await extractPalette(dataUrl, 3);
+          next.primaryColor = palette[0] ?? design.primaryColor;
+          next.secondaryColor = palette[1] ?? design.secondaryColor;
+          next.accentColor = palette[2] ?? design.accentColor;
+        } catch {
+          /* keep manual colors */
+        }
+      }
+      onDesignChange(next);
+    } catch {
+      setErrors((prev) => ({ ...prev }));
+    }
+  }
+
+  async function toggleLogoPalette() {
+    const next = !design.useLogoPalette;
+    if (next && design.logoDataUrl) {
+      try {
+        const palette = await extractPalette(design.logoDataUrl, 3);
+        patchDesign({
+          useLogoPalette: true,
+          primaryColor: palette[0] ?? design.primaryColor,
+          secondaryColor: palette[1] ?? design.secondaryColor,
+          accentColor: palette[2] ?? design.accentColor,
+        });
+        return;
+      } catch {
+        /* fall through to just toggle */
+      }
+    }
+    patchDesign({ useLogoPalette: next });
+  }
+
+  function setPhotoUrl(index: number, value: string) {
+    const photoUrls = [...design.photoUrls];
+    while (photoUrls.length < 3) photoUrls.push("");
+    photoUrls[index] = value;
+    patchDesign({ photoUrls });
   }
 
   function handleGenerate() {
@@ -235,6 +325,120 @@ export function GeneratorForm({
             disabled={loading}
           />
         </Field>
+
+        <Separator />
+
+        <div className="flex flex-col gap-3">
+          <span className="text-xs font-medium text-muted-foreground">
+            Design
+          </span>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-foreground">Logo</span>
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleLogoChange}
+                disabled={loading}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading}
+              >
+                Upload logo
+              </Button>
+              {design.logoDataUrl ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={design.logoDataUrl}
+                    alt="Uploaded logo preview"
+                    className="h-9 w-9 rounded-md border border-border object-contain"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => patchDesign({ logoDataUrl: undefined })}
+                    disabled={loading}
+                  >
+                    Remove
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={design.useLogoPalette ? "default" : "outline"}
+                    size="sm"
+                    onClick={toggleLogoPalette}
+                    disabled={loading}
+                  >
+                    Use logo colors
+                  </Button>
+                </>
+              ) : null}
+            </div>
+          </div>
+
+          <ColorField
+            label="Primary"
+            value={design.primaryColor}
+            onChange={(v) => patchDesign({ primaryColor: v })}
+          />
+          <ColorField
+            label="Secondary"
+            value={design.secondaryColor}
+            onChange={(v) => patchDesign({ secondaryColor: v })}
+          />
+          <ColorField
+            label="Accent"
+            value={design.accentColor}
+            onChange={(v) => patchDesign({ accentColor: v })}
+          />
+
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm text-foreground">Site theme</span>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant={design.siteTheme === "dark" ? "default" : "outline"}
+                onClick={() => patchDesign({ siteTheme: "dark" })}
+                disabled={loading}
+              >
+                Dark
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={design.siteTheme === "light" ? "default" : "outline"}
+                onClick={() => patchDesign({ siteTheme: "light" })}
+                disabled={loading}
+              >
+                Light
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-foreground">
+              Photo URLs <span className="text-xs font-normal text-muted-foreground">optional, up to 3</span>
+            </span>
+            {[0, 1, 2].map((i) => (
+              <Input
+                key={i}
+                placeholder={`https://example.com/photo-${i + 1}.jpg`}
+                value={design.photoUrls[i] ?? ""}
+                onChange={(e) => setPhotoUrl(i, e.target.value)}
+                disabled={loading}
+              />
+            ))}
+          </div>
+        </div>
 
         <Button
           type="button"
