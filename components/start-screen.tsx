@@ -2,26 +2,16 @@
 
 import * as React from "react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ChatComposer } from "@/components/chat-composer";
-import {
-  hasErrors,
-  validateLandingPageForm,
-  type FormErrors,
-} from "@/lib/validation";
+import { type FormErrors } from "@/lib/validation";
 import { fileToDataUrl, extractPalette } from "@/lib/logo";
 import type {
   LandingPageDesignInput,
-  LandingPageFormInput,
 } from "@/lib/types";
-import { AdvancedOptions } from "@/components/advanced-options";
 
 export function StartScreen({
   prompt,
   onPromptChange,
-  form,
-  onFormChange,
   design,
   onDesignChange,
   errors,
@@ -30,17 +20,13 @@ export function StartScreen({
 }: {
   prompt: string;
   onPromptChange: (value: string) => void;
-  form: LandingPageFormInput;
-  onFormChange: (form: LandingPageFormInput) => void;
   design: LandingPageDesignInput;
   onDesignChange: (design: LandingPageDesignInput) => void;
   errors: FormErrors;
   loading: boolean;
   onGenerate: () => void;
 }) {
-  const [showAdvanced, setShowAdvanced] = React.useState(false);
   const logoInputRef = React.useRef<HTMLInputElement>(null);
-  const canGenerate = prompt.trim().length > 0 || !hasErrors(validateLandingPageForm(form));
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -97,34 +83,19 @@ export function StartScreen({
           />
         </span>
       </button>
-      <button
-        type="button"
-        onClick={() => setShowAdvanced((v) => !v)}
-        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-zinc-300 hover:bg-white/5 hover:text-white"
-      >
-        Design options
-      </button>
     </>
   );
 
   return (
     <div className="flex min-h-screen flex-col bg-black">
-      <header className="flex items-center justify-between border-b border-white/5 px-6 py-4">
-        <div className="flex items-baseline gap-3">
-          <span className="text-sm font-semibold tracking-tight text-white">
-            p0r by Louda
-          </span>
-          <span className="hidden text-xs text-zinc-500 sm:inline">
-            Build Landing Page with AI
-          </span>
-        </div>
-        <Badge variant="outline" className="border-white/10 text-zinc-400">
-          Beta
-        </Badge>
+      <header className="flex items-center border-b border-white/5 px-6 py-4">
+        <span className="text-sm font-semibold tracking-tight text-white">
+          p0r by Louda
+        </span>
       </header>
 
       <main className="flex flex-1 items-center justify-center px-6 py-12">
-        <div className="w-full max-w-2xl">
+        <div className="w-full max-w-[720px]">
           <h1 className="text-center text-3xl font-semibold tracking-tight text-white sm:text-4xl">
             What do you want to create?
           </h1>
@@ -137,7 +108,7 @@ export function StartScreen({
               value={prompt}
               onChange={onPromptChange}
               onSubmit={onGenerate}
-              placeholder="Describe the landing page you want to build..."
+              placeholder="Ask p0r to build..."
               plusContent={plusContent}
               disabled={loading}
               submitLabel={loading ? "Generating..." : "Generate"}
@@ -165,21 +136,8 @@ export function StartScreen({
 
           {Object.keys(errors).length > 0 ? (
             <p className="mt-3 text-center text-sm text-destructive">
-              Add a prompt, or open Design options and fill the required fields.
+              Add a prompt to continue.
             </p>
-          ) : null}
-
-          {showAdvanced ? (
-            <div className="mt-6 rounded-2xl border border-white/10 bg-zinc-950 p-5">
-              <AdvancedOptions
-                form={form}
-                onFormChange={onFormChange}
-                design={design}
-                onDesignChange={onDesignChange}
-                errors={errors}
-                loading={loading}
-              />
-            </div>
           ) : null}
         </div>
       </main>

@@ -264,10 +264,37 @@ export function heroArtHtml(
   </div>`;
 }
 
+function autoShowcaseHtml(design: LandingPageDesignInput): string {
+  const accent = design.accentColor;
+  const services = ["Diagnostics", "Brakes", "Maintenance", "Body & detail"];
+  const cards = services
+    .map(
+      (s) => `<div class="sc-card"><span class="sc-ic" style="color:${accent}">✓</span><span>${s}</span></div>`
+    )
+    .join("");
+  return `<div class="auto-showcase" aria-hidden="true">
+  <div class="sc-head">
+    <span class="sc-chip">Service categories</span>
+    <span class="sc-status">Walk-ins welcome</span>
+  </div>
+  <div class="sc-grid">${cards}</div>
+  <div class="sc-book">
+    <div class="sc-line"></div>
+    <div class="sc-line short"></div>
+    <span class="sc-cta" style="background:${design.primaryColor};color:${readableText(
+      design.primaryColor
+    )}">Book a service</span>
+  </div>
+</div>`;
+}
+
 export function showcaseGraphicHtml(
   style: VisualStyle,
   design: LandingPageDesignInput
 ): string {
+  if (style === "auto") {
+    return autoShowcaseHtml(design);
+  }
   const enhanced = design.useGeneratedImages ? " art-enhanced" : "";
   return `<div class="browser${enhanced}" aria-hidden="true">
   <div class="browser-bar"><span></span><span></span><span></span></div>
@@ -453,6 +480,19 @@ body { overflow-x: hidden; font-family: ui-sans-serif, system-ui, -apple-system,
 .lp .bb-lines span.tiny { width: 40%; }
 .lp .bb-stack { display: flex; gap: 10px; margin-top: auto; }
 .lp .bb-pill { height: 30px; flex: 1; border-radius: 9px; background: var(--tint); border: 1px solid var(--border); }
+
+/* Auto-specific showcase */
+.lp .auto-showcase { border-radius: var(--radius-lg); border: 1px solid var(--border); background: linear-gradient(160deg, var(--surface), var(--surface-2)); overflow: hidden; box-shadow: var(--shadow); height: 100%; display: flex; flex-direction: column; gap: 18px; padding: clamp(22px, 3vw, 34px); }
+.lp .sc-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.lp .sc-chip { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: var(--accent); background: var(--accent-tint); border: 1px solid var(--border); padding: 4px 9px; border-radius: 999px; }
+.lp .sc-status { font-size: 11px; color: var(--muted); }
+.lp .sc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.lp .sc-card { display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); background: var(--surface); border-radius: 12px; padding: 14px; font-size: 14px; color: var(--fg); }
+.lp .sc-ic { font-weight: 700; }
+.lp .sc-book { margin-top: auto; display: flex; flex-direction: column; gap: 9px; }
+.lp .sc-line { height: 9px; border-radius: 999px; background: var(--border-strong); }
+.lp .sc-line.short { width: 60%; }
+.lp .sc-cta { align-self: flex-start; margin-top: 6px; height: 42px; display: inline-flex; align-items: center; padding: 0 20px; border-radius: 10px; font-weight: 600; font-size: 14px; }
 
 /* FAQ */
 .lp .faqs { display: flex; flex-direction: column; border-top: 1px solid var(--border); }

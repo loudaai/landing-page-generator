@@ -35,6 +35,7 @@ export default function Home() {
   const [chat, setChat] = React.useState<ChatMessage[]>([]);
   const [questions, setQuestions] = React.useState<ClarifyingQuestion[]>([]);
   const [answers, setAnswers] = React.useState<Record<string, string>>({});
+  const [activeQuestion, setActiveQuestion] = React.useState(0);
   const [context, setContext] = React.useState("");
 
   const [followUp, setFollowUp] = React.useState("");
@@ -104,6 +105,7 @@ export default function Home() {
       const result = data?.result;
       if (result?.shouldAskQuestions && Array.isArray(result.questions) && result.questions.length) {
         setQuestions(result.questions);
+        setActiveQuestion(0);
         if (result.inferred) mergeInferred(result.inferred);
         setStatus("asking");
         pushMessage({
@@ -144,25 +146,36 @@ export default function Home() {
     runPlan();
   }
 
-  function handleAnswer(id: string, value: string) {
-    setAnswers((prev) => ({ ...prev, [id]: value }));
+  function handleAnswer(value: string) {
+    const q = questions[activeQuestion];
+    if (!q) return;
+    const nextAnswers = { ...answers, [q.id]: value };
+    setAnswers(nextAnswers);
+    pushMessage({ role: "user", content: value });
+
+    if (activeQuestion + 1 < questions.length) {
+      setActiveQuestion(activeQuestion + 1);
+    } else {
+      submitAnswers(nextAnswers);
+    }
   }
 
-  function buildAnswersText(): string {
+  function buildAnswersText(ans: Record<string, string>): string {
     return questions
       .map((q) => {
-        const a = answers[q.id];
+        const a = ans[q.id];
         return a ? `${q.question}\n${a}` : "";
       })
       .filter(Boolean)
       .join("\n\n");
   }
 
-  function submitAnswers() {
-    const answersText = buildAnswersText();
+  function submitAnswers(ans: Record<string, string> = answers) {
+    const answersText = buildAnswersText(ans);
     const fullPrompt = [prompt, answersText].filter(Boolean).join("\n\n");
     setContext(answersText);
     setQuestions([]);
+    setActiveQuestion(0);
     setStatus("generating");
     pushMessage({
       role: "assistant",
@@ -218,9 +231,9 @@ export default function Home() {
         chat={chat}
         status={status}
         questions={questions}
-        answers={answers}
-        onAnswer={handleAnswer}
-        onSubmitAnswers={submitAnswers}
+        activeQuestion={activeQuestion}
+        onSelectAnswer={handleAnswer}
+        onCustomAnswer={handleAnswer}
         onSkip={skipQuestions}
         followUp={followUp}
         onFollowUpChange={setFollowUp}
@@ -235,8 +248,6 @@ export default function Home() {
     <StartScreen
       prompt={prompt}
       onPromptChange={setPrompt}
-      form={form}
-      onFormChange={setForm}
       design={design}
       onDesignChange={setDesign}
       errors={errors}

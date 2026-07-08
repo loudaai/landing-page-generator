@@ -2,7 +2,24 @@
 
 import * as React from "react";
 
-import { Button } from "@/components/ui/button";
+function CopyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+    </svg>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3v12" />
+      <path d="M7 11l5 5 5-5" />
+      <path d="M5 21h14" />
+    </svg>
+  );
+}
 
 export function ExportActions({
   html,
@@ -55,28 +72,25 @@ export function ExportActions({
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleCopy}
-          disabled={disabled}
-        >
-          {copied ? "Copied!" : "Copy HTML"}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleDownload}
-          disabled={disabled}
-        >
-          Download index.html
-        </Button>
-      </div>
-      {copied ? (
-        <span className="text-xs text-muted-foreground">HTML copied to clipboard.</span>
-      ) : null}
+    <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        onClick={handleCopy}
+        disabled={disabled}
+        title={copied ? "Copied!" : "Copy HTML"}
+        className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-zinc-300 hover:bg-white/5 hover:text-white disabled:opacity-40"
+      >
+        <CopyIcon />
+      </button>
+      <button
+        type="button"
+        onClick={handleDownload}
+        disabled={disabled}
+        title="Download index.html"
+        className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-zinc-300 hover:bg-white/5 hover:text-white disabled:opacity-40"
+      >
+        <DownloadIcon />
+      </button>
       {error ? <span className="text-xs text-destructive">{error}</span> : null}
     </div>
   );

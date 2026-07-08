@@ -469,3 +469,53 @@ On Generate, the app sets `mode = "workspace"` right away, adds the user prompt 
 * Generate immediately opens the workspace.
 * Chat shows prompt + status; questions have choices/recommended/custom; skip works; generation works without questions.
 * Preview is full canvas via iframe `srcDoc`; copy/download use exact HTML; no white border; `npm run build` passes.
+
+## UI polish and tailored generation
+
+A focused polish pass: clean v0-style composer, muted chat, one-by-one questions, icon toolbar, and more tailored generated sites.
+
+### Header
+* Left: `p0r by Louda` only. No tagline, no `Beta`.
+
+### Composer
+* Centered, width ~680–760px.
+* Compact empty height (48–56px), auto-grows to ~160px.
+* Enter sends; Shift+Enter new line.
+* Placeholder: `Ask p0r to build...`.
+* Plus button left, send right; buttons tight/aligned.
+
+### Plus menu
+* Opens below the plus button.
+* Closes on outside click, Escape, and after selecting an option.
+* Items: Upload logo, Generate images toggle. No visible "Design options".
+
+### Chat
+* Assistant messages are plain muted text, no heavy background or border.
+* Thinking/working state is a muted line with a neutral monochrome icon (no bright color).
+* User prompts get a subtle bubble.
+
+### Questions
+* Asked one at a time (max 4).
+* Each is a normal assistant turn with compact option buttons.
+* Recommended option indicated by text only.
+* Custom answer allowed; Skip available; final answer triggers generation.
+
+### Toolbar
+* Copy/Download/Regenerate are icon-only square buttons (~32–36px) with title tooltips.
+
+### Generated site
+* Industry-aware (`inferVisualStyle`): auto/saas/fitness/education/local-business/portfolio/service/default.
+* Auto: appointment/inspection/service hero, service-category showcase, garage-inspired accents.
+* No fake reviews, star ratings, certifications, awards, business hours, or phone numbers. Use placeholders like `(555) 123-4567`, `Add your address`, `Add business hours` when details are missing.
+* No hype words (innovative, revolutionary, etc.).
+
+### Follow-up
+* Workspace follow-up revises/regenerates the current page using conversation context (prompt + prior answers + instruction).
+
+### Acceptance
+* Header only shows `p0r by Louda`.
+* Composer compact/aligned; Enter sends; Shift+Enter newline.
+* Plus dropdown opens below and closes on outside click/Escape/select.
+* Assistant chat has no heavy background/borders; thought state muted + neutral icon.
+* Questions one-by-one; options clean; Copy/Download icon-only.
+* Generated auto pages tailored; no fake claims; exported HTML no white border; `npm run build` passes.
