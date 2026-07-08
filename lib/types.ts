@@ -56,6 +56,19 @@ export type BackgroundStyle =
   | "soft"
   | "premium";
 
+export type FontChoice =
+  | "modern"
+  | "grotesk"
+  | "editorial"
+  | "rounded"
+  | "tech";
+
+export type RadiusChoice = "sharp" | "soft" | "rounded";
+
+export type DensityChoice = "compact" | "balanced" | "airy";
+
+export type DecorationChoice = "minimal" | "balanced" | "rich";
+
 export type ContactMode =
   | "email"
   | "phone"
@@ -217,6 +230,10 @@ export type PageBlueprint = {
     secondaryColor: string;
     accentColor: string;
     backgroundStyle: BackgroundStyle;
+    fontChoice: FontChoice;
+    radius: RadiusChoice;
+    density: DensityChoice;
+    decoration: DecorationChoice;
   };
   navigation: {
     showNav: boolean;

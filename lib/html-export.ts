@@ -35,7 +35,7 @@ type RenderCtx = {
 };
 
 function buildVars(blueprint: PageBlueprint, design: LandingPageDesignInput): Record<string, string> {
-  const base = themeVars(design);
+  const base = themeVars(design, blueprint.theme);
   const customized = Boolean(design.colorsCustomized) || Boolean(design.useLogoPalette);
   if (!customized) {
     base["--primary"] = blueprint.theme.primaryColor;

@@ -1,9 +1,13 @@
 import type {
   BackgroundStyle,
   ContactMode,
+  DecorationChoice,
+  DensityChoice,
+  FontChoice,
   GraphicType,
   PageBlueprint,
   PageSection,
+  RadiusChoice,
   VisualStyle,
 } from "./types";
 
@@ -68,6 +72,24 @@ const BACKGROUND_STYLES: BackgroundStyle[] = [
   "industrial",
   "soft",
   "premium",
+];
+
+const FONT_CHOICES: FontChoice[] = [
+  "modern",
+  "grotesk",
+  "editorial",
+  "rounded",
+  "tech",
+];
+
+const RADIUS_CHOICES: RadiusChoice[] = ["sharp", "soft", "rounded"];
+
+const DENSITY_CHOICES: DensityChoice[] = ["compact", "balanced", "airy"];
+
+const DECORATION_CHOICES: DecorationChoice[] = [
+  "minimal",
+  "balanced",
+  "rich",
 ];
 
 const CONTACT_MODES: ContactMode[] = [
@@ -312,6 +334,10 @@ export function defaultBlueprint(prompt = ""): PageBlueprint {
       secondaryColor: "#26262e",
       accentColor: "#9b9ba6",
       backgroundStyle: "minimal",
+      fontChoice: "modern",
+      radius: "soft",
+      density: "balanced",
+      decoration: "balanced",
     },
     navigation: {
       showNav: true,
@@ -425,6 +451,10 @@ export function normalizePageBlueprint(
     BACKGROUND_STYLES,
     "minimal"
   ) as BackgroundStyle;
+  const fontChoice = pick(themeRaw.fontChoice, FONT_CHOICES, "modern") as FontChoice;
+  const radius = pick(themeRaw.radius, RADIUS_CHOICES, "soft") as RadiusChoice;
+  const density = pick(themeRaw.density, DENSITY_CHOICES, "balanced") as DensityChoice;
+  const decoration = pick(themeRaw.decoration, DECORATION_CHOICES, "balanced") as DecorationChoice;
 
   const sections = asArray(obj.sections)
     .map(normalizeSection)
@@ -492,6 +522,10 @@ export function normalizePageBlueprint(
       secondaryColor: asString(themeRaw.secondaryColor, "#26262e"),
       accentColor: asString(themeRaw.accentColor, "#9b9ba6"),
       backgroundStyle,
+      fontChoice,
+      radius,
+      density,
+      decoration,
     },
     navigation: {
       showNav: navRaw.showNav !== false,
@@ -632,6 +666,10 @@ export function legacyContentToBlueprint(content: {
       secondaryColor: "#26262e",
       accentColor: "#9b9ba6",
       backgroundStyle: "minimal",
+      fontChoice: "modern",
+      radius: "soft",
+      density: "balanced",
+      decoration: "balanced",
     },
     navigation: { showNav: true, items: [] },
     sections,

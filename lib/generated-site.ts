@@ -1,11 +1,63 @@
 import type {
+  DecorationChoice,
+  DensityChoice,
+  FontChoice,
   GraphicType,
   LandingPageContent,
   LandingPageDesignInput,
+  RadiusChoice,
   VisualStyle,
 } from "./types";
 
 type Vars = Record<string, string>;
+
+const FONT_STACKS: Record<FontChoice, { display: string; body: string }> = {
+  modern: {
+    display:
+      'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    body: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  },
+  grotesk: {
+    display:
+      '"Helvetica Neue", Helvetica, Arial, ui-sans-serif, system-ui, sans-serif',
+    body: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  },
+  editorial: {
+    display: 'Georgia, "Times New Roman", "Iowan Old Style", serif',
+    body: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  },
+  rounded: {
+    display:
+      'ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, -apple-system, sans-serif',
+    body: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  },
+  tech: {
+    display:
+      'ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace',
+    body: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  },
+};
+
+const RADIUS_SCALE: Record<RadiusChoice, { r: string; rl: string }> = {
+  sharp: { r: "8px", rl: "14px" },
+  soft: { r: "14px", rl: "22px" },
+  rounded: { r: "20px", rl: "30px" },
+};
+
+const DENSITY_SCALE: Record<DensityChoice, { sec: string; hero: string }> = {
+  compact: { sec: "clamp(40px, 6vw, 72px)", hero: "clamp(48px, 7vw, 88px)" },
+  balanced: { sec: "clamp(56px, 8vw, 104px)", hero: "clamp(56px, 8vw, 110px)" },
+  airy: { sec: "clamp(72px, 10vw, 140px)", hero: "clamp(72px, 10vw, 140px)" },
+};
+
+const DECOR_SCALE: Record<
+  DecorationChoice,
+  { glow: string; grid: string; panel: string; feat: string }
+> = {
+  minimal: { glow: "0.5", grid: "0", panel: "0.22", feat: "0" },
+  balanced: { glow: "1", grid: "0.5", panel: "0.5", feat: "1" },
+  rich: { glow: "1.15", grid: "0.85", panel: "0.7", feat: "1" },
+};
 
 const DARK_CURATED = {
   bg: "#0a0a0c",
@@ -86,8 +138,24 @@ export function resolvePalette(design: LandingPageDesignInput) {
   return curated;
 }
 
-export function themeVars(design: LandingPageDesignInput): Vars {
+type BlueprintThemeTokens = {
+  fontChoice?: FontChoice;
+  radius?: RadiusChoice;
+  density?: DensityChoice;
+  decoration?: DecorationChoice;
+};
+
+export function themeVars(
+  design: LandingPageDesignInput,
+  theme: BlueprintThemeTokens = {}
+): Vars {
   const p = resolvePalette(design);
+
+  const font = FONT_STACKS[theme.fontChoice ?? "modern"];
+  const radius = RADIUS_SCALE[theme.radius ?? "soft"];
+  const density = DENSITY_SCALE[theme.density ?? "balanced"];
+  const decor = DECOR_SCALE[theme.decoration ?? "balanced"];
+
   return {
     "--bg": p.bg,
     "--surface": p.surface,
@@ -102,12 +170,20 @@ export function themeVars(design: LandingPageDesignInput): Vars {
     "--secondary": p.secondary,
     "--accent": p.accent,
     "--maxw": "1200px",
-    "--radius": "16px",
-    "--radius-lg": "24px",
+    "--radius": radius.r,
+    "--radius-lg": radius.rl,
     "--shadow":
       design.siteTheme === "dark"
         ? "0 24px 60px -20px rgba(0,0,0,0.65)"
         : "0 24px 60px -24px rgba(15,15,25,0.25)",
+    "--font-display": font.display,
+    "--font-body": font.body,
+    "--sec-pad": density.sec,
+    "--hero-pad": density.hero,
+    "--decor-glow": decor.glow,
+    "--decor-grid": decor.grid,
+    "--decor-panel": decor.panel,
+    "--decor-feat": decor.feat,
     "--tint": `color-mix(in srgb, ${p.primary} 16%, transparent)`,
     "--tint-strong": `color-mix(in srgb, ${p.primary} 30%, transparent)`,
     "--accent-tint": `color-mix(in srgb, ${p.accent} 22%, transparent)`,
@@ -329,21 +405,21 @@ export function readableText(hex: string): string {
 export const GENERATED_SITE_CSS = `
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; background: var(--bg); }
-body { overflow-x: hidden; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+body { overflow-x: hidden; font-family: var(--font-body); }
 
-.lp { background: var(--bg); color: var(--fg); line-height: 1.6; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; min-height: 100vh; width: 100%; position: relative; overflow: hidden; }
+.lp { background: var(--bg); color: var(--fg); line-height: 1.6; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; min-height: 100vh; width: 100%; position: relative; overflow: hidden; font-family: var(--font-body); }
 .lp .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
-.lp .section { padding: clamp(56px, 8vw, 104px) 0; position: relative; }
+.lp .section { padding: var(--sec-pad) 0; position: relative; }
 .lp .section + .section { border-top: 1px solid var(--border); }
 .lp .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); }
 .lp .eyebrow::before { content: ""; width: 18px; height: 1px; background: currentColor; }
-.lp h1, .lp h2, .lp h3 { margin: 0; font-weight: 700; letter-spacing: -0.025em; }
+.lp h1, .lp h2, .lp h3 { margin: 0; font-weight: 700; letter-spacing: -0.025em; font-family: var(--font-display); }
 .lp h2 { font-size: clamp(28px, 4vw, 44px); line-height: 1.1; }
 .lp h3 { font-size: 18px; line-height: 1.3; }
 .lp p { margin: 0; color: var(--muted); }
 .lp .lead { font-size: clamp(16px, 1.4vw, 19px); color: var(--muted); max-width: 56ch; }
 
-.lp .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 50px; padding: 0 26px; border-radius: 12px; font-weight: 600; font-size: 15px; border: 1px solid transparent; text-decoration: none; transition: transform .15s ease, filter .15s ease; }
+.lp .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 50px; padding: 0 26px; border-radius: var(--radius); font-weight: 600; font-size: 15px; border: 1px solid transparent; text-decoration: none; transition: transform .15s ease, filter .15s ease; }
 .lp .btn:hover { transform: translateY(-1px); }
 .lp .btn-primary { background: var(--primary); color: var(--primary-fg); box-shadow: 0 12px 30px -12px var(--tint-strong); }
 .lp .btn-secondary { background: transparent; border-color: var(--border-strong); color: var(--fg); }
@@ -361,7 +437,7 @@ body { overflow-x: hidden; font-family: ui-sans-serif, system-ui, -apple-system,
 @media (min-width: 860px) { .lp .nav { display: flex; } }
 
 /* Hero */
-.lp .hero { display: grid; grid-template-columns: 1fr; gap: 48px; align-items: center; padding: clamp(56px, 8vw, 110px) 24px; position: relative; }
+.lp .hero { display: grid; grid-template-columns: 1fr; gap: 48px; align-items: center; padding: var(--hero-pad) 24px; position: relative; }
 .lp .hero::before { content: ""; position: absolute; inset: 0; background: radial-gradient(60% 50% at 80% 0%, var(--tint), transparent 70%); pointer-events: none; }
 .lp .hero-copy { position: relative; }
 .lp .hero h1 { font-size: clamp(40px, 6.4vw, 76px); line-height: 1.02; letter-spacing: -0.035em; margin: 18px 0 0; }
@@ -374,8 +450,8 @@ body { overflow-x: hidden; font-family: ui-sans-serif, system-ui, -apple-system,
 
 /* Hero art */
 .lp .hero-art { position: relative; aspect-ratio: 1 / 1; width: 100%; border-radius: var(--radius-lg); border: 1px solid var(--border); background: linear-gradient(160deg, var(--surface), var(--surface-2)); overflow: hidden; box-shadow: var(--shadow); }
-.lp .art-glow { position: absolute; inset: -20%; background: radial-gradient(40% 40% at 28% 30%, var(--tint-strong), transparent 60%), radial-gradient(42% 42% at 78% 72%, var(--accent-tint), transparent 60%); filter: blur(8px); }
-.lp .art-grid { position: absolute; inset: 0; background-image: radial-gradient(var(--border-strong) 1px, transparent 1px); background-size: 22px 22px; opacity: 0.5; -webkit-mask-image: radial-gradient(circle at 60% 40%, #000, transparent 78%); mask-image: radial-gradient(circle at 60% 40%, #000, transparent 78%); }
+.lp .art-glow { position: absolute; inset: -20%; background: radial-gradient(40% 40% at 28% 30%, var(--tint-strong), transparent 60%), radial-gradient(42% 42% at 78% 72%, var(--accent-tint), transparent 60%); filter: blur(8px); opacity: var(--decor-glow); }
+.lp .art-grid { position: absolute; inset: 0; background-image: radial-gradient(var(--border-strong) 1px, transparent 1px); background-size: 22px 22px; opacity: var(--decor-grid); -webkit-mask-image: radial-gradient(circle at 60% 40%, #000, transparent 78%); mask-image: radial-gradient(circle at 60% 40%, #000, transparent 78%); }
 .lp .art-card { position: absolute; border-radius: 14px; background: color-mix(in srgb, var(--bg) 78%, transparent); border: 1px solid var(--border-strong); box-shadow: 0 18px 40px -18px rgba(0,0,0,0.5); backdrop-filter: blur(6px); padding: 16px; display: flex; flex-direction: column; gap: 9px; }
 .lp .art-card--a { left: 8%; top: 16%; width: 46%; }
 .lp .art-card--b { right: 8%; bottom: 14%; width: 44%; }
@@ -422,7 +498,7 @@ body { overflow-x: hidden; font-family: ui-sans-serif, system-ui, -apple-system,
 /* Problem / Solution split */
 .lp .split { display: grid; grid-template-columns: 1fr; gap: 20px; }
 .lp .panel { position: relative; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--surface); padding: clamp(26px, 3vw, 38px); overflow: hidden; }
-.lp .panel::before { content: ""; position: absolute; inset: 0; background: radial-gradient(80% 60% at 100% 0%, var(--tint), transparent 60%); opacity: 0.5; }
+.lp .panel::before { content: ""; position: absolute; inset: 0; background: radial-gradient(80% 60% at 100% 0%, var(--tint), transparent 60%); opacity: var(--decor-panel); }
 .lp .panel.alt { background: linear-gradient(160deg, var(--surface), var(--surface-2)); border-color: var(--border-strong); }
 .lp .panel .tag { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
 .lp .panel h3 { font-size: clamp(20px, 2.4vw, 28px); margin: 12px 0 14px; }
@@ -440,7 +516,7 @@ body { overflow-x: hidden; font-family: ui-sans-serif, system-ui, -apple-system,
 /* Features bento */
 .lp .bento { display: grid; grid-template-columns: 1fr; gap: 18px; }
 .lp .feature { position: relative; display: flex; flex-direction: column; gap: 12px; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius-lg); padding: clamp(22px, 2.6vw, 30px); overflow: hidden; }
-.lp .feature::after { content: ""; position: absolute; right: -40px; top: -40px; width: 160px; height: 160px; border-radius: 999px; background: radial-gradient(circle, var(--accent-tint), transparent 70%); }
+.lp .feature::after { content: ""; position: absolute; right: -40px; top: -40px; width: 160px; height: 160px; border-radius: 999px; background: radial-gradient(circle, var(--accent-tint), transparent 70%); opacity: var(--decor-feat); }
 .lp .feature .glyph { width: 30px; height: 30px; color: var(--accent); }
 .lp .feature h3 { font-size: clamp(17px, 1.8vw, 21px); }
 .lp .feature p { font-size: 15px; position: relative; }

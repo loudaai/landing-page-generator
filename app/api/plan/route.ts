@@ -7,8 +7,9 @@ import {
 import { parseAiJson } from "@/lib/parse";
 import type { ClarifyingQuestion, PlanningResult } from "@/lib/types";
 
-const MODEL = process.env.OPENROUTER_MODEL || "tencent/hy3:free";
-const API_KEY = process.env.OPENROUTER_API_KEY;
+const MODEL = process.env.OPEN_GATEWAY_MODEL || "tencent/hy3:free";
+const API_KEY = process.env.OPEN_GATEWAY_API_KEY;
+const BASE_URL = process.env.OPEN_GATEWAY_BASE_URL || "https://opengateway.gitlawb.com/v1";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 function extractBrand(prompt: string): string | undefined {
@@ -131,7 +132,8 @@ export async function POST(req: NextRequest) {
   const timeout = setTimeout(() => controller.abort(), 45000);
 
   try {
-    const upstream = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const upstream = await fetch(
+      `${BASE_URL}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

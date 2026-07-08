@@ -136,7 +136,11 @@ export function buildBlueprintSystemPrompt(): string {
     "primaryColor": string,
     "secondaryColor": string,
     "accentColor": string,
-    "backgroundStyle": "minimal" | "gradient" | "editorial" | "industrial" | "soft" | "premium"
+    "backgroundStyle": "minimal" | "gradient" | "editorial" | "industrial" | "soft" | "premium",
+    "fontChoice": "modern" | "grotesk" | "editorial" | "rounded" | "tech",
+    "radius": "sharp" | "soft" | "rounded",
+    "density": "compact" | "balanced" | "airy",
+    "decoration": "minimal" | "balanced" | "rich"
   },
   "navigation": { "showNav": boolean, "items": [{ "label": string, "targetId": string }] },
   "sections": [ /* ordered PageSection objects, see types below */ ],
@@ -174,6 +178,11 @@ How to design:
 - Choose "heroVisual" and "sectionVisuals" from the GraphicType list that match the industry.
 - Choose "ctaStrategy": primaryCTA should be the single most important action (e.g. "Book a service" for auto repair, "Request a quote" for freelancers). Set contactMode appropriately.
 - Choose "theme.backgroundStyle" to match the brand (industrial for auto, premium/soft for portfolio, minimal for SaaS). Colors must be valid hex codes.
+- Choose the visual design tokens intentionally to make the page feel crafted, not templated:
+  - "fontChoice": "editorial" for refined/luxury brands, "grotesk" for bold modern brands, "tech" for developer/AI tools, "rounded" for friendly/casual, "modern" for clean general use.
+  - "radius": "sharp" for crisp/industrial/editorial, "soft" for standard, "rounded" for friendly/soft brands.
+  - "density": "compact" for information-dense/pricing pages, "balanced" default, "airy" for premium/spacious feel.
+  - "decoration": "minimal" for clean/corporate, "balanced" default, "rich" for bold visual brands with more glow and texture.
 - Write copy that is specific, practical, and non-hype. Avoid: innovative, revolutionary, game-changing, next-level, seamless, cutting-edge, world-class, powerful solution, transform your business, unlock your potential.
 - Do NOT invent fake reviews, ratings, certifications, awards, statistics, customer counts, business hours, phone numbers, addresses, or "same-day service" guarantees. When contact details are missing, use clearly placeholder values: "Add your phone number", "Add your address", "Add business hours", "Book a service".
 - Infer any missing information when reasonable. Return JSON only.`;

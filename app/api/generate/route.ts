@@ -10,18 +10,19 @@ import { parseAiJson } from "@/lib/parse";
 import { validateLandingPageForm } from "@/lib/validation";
 import type { PageBlueprint, LandingPageFormInput } from "@/lib/types";
 
-const MODEL = process.env.OPENROUTER_MODEL || "tencent/hy3:free";
-const API_KEY = process.env.OPENROUTER_API_KEY;
+const MODEL = process.env.OPEN_GATEWAY_MODEL || "tencent/hy3:free";
+const API_KEY = process.env.OPEN_GATEWAY_API_KEY;
+const BASE_URL = process.env.OPEN_GATEWAY_BASE_URL || "https://opengateway.gitlawb.com/v1";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
 
-async function callOpenRouter(messages: ChatMessage[]): Promise<string> {
+async function callOpenGateway(messages: ChatMessage[]): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 60000);
   try {
     const upstream = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
+      `${BASE_URL}/chat/completions`,
       {
         method: "POST",
         headers: {
@@ -42,7 +43,7 @@ async function callOpenRouter(messages: ChatMessage[]): Promise<string> {
     if (!upstream.ok) {
       const detail = await upstream.text().catch(() => "");
       throw new Error(
-        `OpenRouter responded ${upstream.status}${detail ? `: ${detail.slice(0, 200)}` : ""}`
+        `OpenGateway responded ${upstream.status}${detail ? `: ${detail.slice(0, 200)}` : ""}`
       );
     }
 
@@ -72,7 +73,7 @@ function buildInput(raw: Record<string, unknown>): LandingPageFormInput {
 export async function POST(req: NextRequest) {
   if (!API_KEY) {
     return NextResponse.json(
-      { error: "OpenRouter API key is not configured on the server." },
+      { error: "OpenGateway API key is not configured on the server." },
       { status: 500 }
     );
   }
@@ -123,10 +124,10 @@ export async function POST(req: NextRequest) {
   for (const messages of attempts) {
     let rawContent: string;
     try {
-      rawContent = await callOpenRouter(messages);
+      rawContent = await callOpenGateway(messages);
     } catch (err) {
       lastError =
-        err instanceof Error && err.message.startsWith("OpenRouter")
+        err instanceof Error && err.message.startsWith("OpenGateway")
           ? "AI provider error. Please try again."
           : "AI generation timed out or failed. Please try again.";
       continue;

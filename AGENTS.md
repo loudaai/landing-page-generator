@@ -24,7 +24,7 @@ The MVP must let the user:
 2. Optionally upload a logo (client-side only).
 3. Choose 3 brand colors and a light/dark generated-site theme.
 4. Optionally provide up to 3 photo URLs.
-5. Generate structured landing page content using OpenRouter.
+5. Generate structured landing page content using OpenGateway.
 6. Preview the generated landing page with deterministic graphics.
 7. Copy the generated HTML.
 8. Download the website as `index.html`.
@@ -38,8 +38,8 @@ Use:
 * TypeScript
 * Tailwind CSS
 * shadcn/ui
-* OpenRouter API
-* HY3/free OpenRouter model if available
+* OpenGateway API
+* HY3/free OpenGateway model if available
 * Vercel free tier
 
 Free tools and free tiers only.
@@ -110,7 +110,7 @@ Pipeline:
 ```txt
 User prompt + design input
 → Planner asks questions if needed (max 4, one-by-one)
-→ Server-side OpenRouter call (text only) returns a PageBlueprint JSON
+→ Server-side OpenGateway call (text only) returns a PageBlueprint JSON
 → Parse and normalize the blueprint (validate, repair, fallback)
 → App renders the page from the blueprint using trusted components
 → Generate standalone HTML string from the same blueprint
@@ -195,20 +195,20 @@ The AI returns JSON only. No markdown, code fences, explanations, HTML, or React
 
 Specific, practical, clear, useful, simple, relevant, non-hypey. Avoid: innovative, revolutionary, game-changing, next-level, seamless, cutting-edge, world-class, powerful solution, transform your business, unlock your potential. Do not invent fake testimonials, awards, numbers, case studies, guarantees.
 
-## OpenRouter Rules
+## OpenGateway Rules
 
 Server-side only.
 
 ```env
-OPENROUTER_API_KEY=
-OPENROUTER_MODEL=tencent/hy3:free
+OPEN_GATEWAY_API_KEY=
+OPEN_GATEWAY_MODEL=tencent/hy3:free
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 * Never expose the API key to the client.
-* No `NEXT_PUBLIC_OPENROUTER_API_KEY`.
-* Client calls a local server endpoint; server calls OpenRouter.
-* Model configurable via `OPENROUTER_MODEL`; default `tencent/hy3:free`.
+* No `NEXT_PUBLIC_OPEN_GATEWAY_API_KEY`.
+* Client calls a local server endpoint; server calls OpenGateway.
+* Model configurable via `OPEN_GATEWAY_MODEL`; default `tencent/hy3:free`.
 * No image generation calls; no other providers.
 
 ## Parsing and Normalization
@@ -276,7 +276,7 @@ Local coffee shop, Freelance web design service, Student study app, Beginner fit
 * Deterministic graphics when no photos.
 * Generated site more polished than before.
 * Copy/Download still work; file opens in browser.
-* OpenRouter text generation still works.
+* OpenGateway text generation still works.
 * `npm run build` passes.
 * No secrets committed. No auth/db/dashboard/payments.
 
@@ -299,12 +299,12 @@ Local coffee shop, Freelance web design service, Student study app, Beginner fit
 [ ] Copy HTML works
 [ ] Download index.html works and opens in browser
 [ ] Responsive
-[ ] No OpenRouter key in client code
+[ ] No OpenGateway key in client code
 [ ] Production build passes
 
 ## Vercel Deployment Notes
 
-Push to GitHub, import into Vercel, add env vars (OPENROUTER_API_KEY, OPENROUTER_MODEL, NEXT_PUBLIC_SITE_URL), redeploy, test generation, download index.html, open locally, screenshot.
+Push to GitHub, import into Vercel, add env vars (OPEN_GATEWAY_API_KEY, OPEN_GATEWAY_MODEL, NEXT_PUBLIC_SITE_URL), redeploy, test generation, download index.html, open locally, screenshot.
 
 ## Development Philosophy
 
@@ -443,7 +443,7 @@ On Generate, the app sets `mode = "workspace"` right away, adds the user prompt 
 ### Planning + clarifying questions
 
 * `POST /api/plan` receives the prompt (and optional design) and returns `{ shouldAskQuestions, confidence, inferred, questions }`.
-* Implemented with OpenRouter (server-side, key never exposed). On missing key or failure it falls back to a local planner that returns up to 4 useful questions.
+* Implemented with OpenGateway (server-side, key never exposed). On missing key or failure it falls back to a local planner that returns up to 4 useful questions.
 * Max 4 questions; each has options, one `recommendedOption`, and `allowCustomAnswer: true`.
 * If the prompt is enough, `shouldAskQuestions: false` and generation proceeds directly.
 * Answers are collected in the chat, then generation runs with the original prompt + answers.
@@ -457,12 +457,12 @@ On Generate, the app sets `mode = "workspace"` right away, adds the user prompt 
 ### Generated images toggle
 
 * `LandingPageDesignInput.useGeneratedImages` exists and is toggled from the plus menu.
-* Full AI image generation is not implemented; the toggle currently maps to enhanced deterministic generated graphics. OpenRouter image generation can be plugged in later behind `ENABLE_AI_IMAGES` / `OPENROUTER_IMAGE_MODEL`.
+* Full AI image generation is not implemented; the toggle currently maps to enhanced deterministic generated graphics. OpenGateway image generation can be plugged in later behind `ENABLE_AI_IMAGES` / `OPEN_GATEWAY_IMAGE_MODEL`.
 
 ### Files
 
 * `app/page.tsx`: start/workspace state machine, status, plan→ask→generate flow.
-* `app/api/plan/route.ts`: OpenRouter planner with local fallback.
+* `app/api/plan/route.ts`: OpenGateway planner with local fallback.
 * `components/chat-composer.tsx`, `components/clarifying-questions.tsx`, `components/start-screen.tsx`, `components/workspace.tsx`, `components/export-actions.tsx`, `components/advanced-options.tsx`.
 * `lib/prompts.ts` adds planner prompts; `lib/types.ts` adds the new types.
 
