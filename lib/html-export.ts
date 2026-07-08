@@ -9,6 +9,7 @@ import {
   showcaseGraphicHtml,
   themeVars,
   readableText,
+  aestheticSkin,
 } from "./generated-site";
 
 export function escapeHtml(value: string): string {
@@ -222,6 +223,7 @@ export function generateStandaloneHtmlFromBlueprint(
 
   const photos = design.photoUrls.filter((p) => p.trim() !== "");
   const useGen = Boolean(design.useGeneratedImages) || bp.graphics.useGeneratedImages;
+  const skin = aestheticSkin(bp.theme.aesthetic);
   const ctx: RenderCtx = { design, blueprint: bp, vars, logo, photos, useGen };
 
   const nav = bp.navigation.showNav ? renderNav(ctx) : "";
@@ -234,10 +236,10 @@ export function generateStandaloneHtmlFromBlueprint(
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${esc(bp.meta.brandName)}</title>
 <meta name="description" content="${esc(bp.meta.pageGoal)}" />
-<style>${GENERATED_SITE_CSS}${BLUEPRINT_CSS}</style>
+<style>${GENERATED_SITE_CSS}${BLUEPRINT_CSS}${skin.css}</style>
 </head>
 <body>
-<div class="lp" id="top">
+<div class="lp ${skin.cls}" id="top">
   ${nav}
   ${sectionsHtml}
 </div>

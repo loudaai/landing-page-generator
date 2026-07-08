@@ -69,6 +69,8 @@ export type DensityChoice = "compact" | "balanced" | "airy";
 
 export type DecorationChoice = "minimal" | "balanced" | "rich";
 
+export type AestheticChoice = "studio" | "saas" | "bold" | "minimal";
+
 export type ContactMode =
   | "email"
   | "phone"
@@ -234,6 +236,7 @@ export type PageBlueprint = {
     radius: RadiusChoice;
     density: DensityChoice;
     decoration: DecorationChoice;
+    aesthetic: AestheticChoice;
   };
   navigation: {
     showNav: boolean;

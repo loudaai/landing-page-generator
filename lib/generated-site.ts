@@ -1,4 +1,5 @@
 import type {
+  AestheticChoice,
   DecorationChoice,
   DensityChoice,
   FontChoice,
@@ -801,4 +802,62 @@ export const BLUEPRINT_CSS = `
 /* Section eyebrow helper already exists; ensure spacing */
 .lp .section-head .eyebrow { margin-bottom: var(--sp-4); }
 `;
+
+/* -------------------------------------------------------------------------- */
+/* Aesthetic skins (P2: cohesive premium templates)                          */
+/* The AI picks one; it layers a signature look on top of the token system.  */
+/* -------------------------------------------------------------------------- */
+
+export type AestheticSkin = { cls: string; css: string };
+
+const AESTHETIC_SKINS: Record<AestheticChoice, AestheticSkin> = {
+  minimal: {
+    cls: "aesthetic-minimal",
+    css: `
+.lp.aesthetic-minimal { --sec-pad: clamp(64px, 9vw, 120px); --shadow: 0 24px 60px -32px rgba(0,0,0,0.45); }
+.lp.aesthetic-minimal .section + .section { border-top-color: color-mix(in srgb, var(--border) 55%, transparent); }
+.lp.aesthetic-minimal .benefit, .lp.aesthetic-minimal .feature, .lp.aesthetic-minimal .service-card, .lp.aesthetic-minimal .panel { border-color: color-mix(in srgb, var(--border) 65%, transparent); }
+.lp.aesthetic-minimal .hero h1 { letter-spacing: -0.02em; }
+.lp.aesthetic-minimal .eyebrow::before { width: 24px; }
+.lp.aesthetic-minimal .cta-band { background: var(--surface); }
+`,
+  },
+  saas: {
+    cls: "aesthetic-saas",
+    css: `
+.lp.aesthetic-saas { --decor-glow: 1.2; --radius: 14px; --radius-lg: 22px; }
+.lp.aesthetic-saas .btn-primary { box-shadow: 0 14px 34px -12px var(--tint-strong); }
+.lp.aesthetic-saas .feature, .lp.aesthetic-saas .service-card { box-shadow: var(--shadow-sm); }
+.lp.aesthetic-saas .feature::after { opacity: 1; }
+.lp.aesthetic-saas .hero::before { background: radial-gradient(60% 50% at 82% 0%, var(--tint-strong), transparent 70%); }
+.lp.aesthetic-saas .cta-band { border-color: var(--border-strong); }
+`,
+  },
+  studio: {
+    cls: "aesthetic-studio",
+    css: `
+.lp.aesthetic-studio { --font-display: Georgia, "Times New Roman", "Iowan Old Style", "Noto Serif", serif; --sec-pad: clamp(60px, 8vw, 112px); }
+.lp.aesthetic-studio h1, .lp.aesthetic-studio h2, .lp.aesthetic-studio h3 { letter-spacing: -0.01em; font-weight: 600; }
+.lp.aesthetic-studio .section + .section { border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent); }
+.lp.aesthetic-studio .eyebrow { letter-spacing: 0.22em; }
+.lp.aesthetic-studio .lead { font-size: clamp(17px, 1.5vw, 21px); }
+.lp.aesthetic-studio .feature, .lp.aesthetic-studio .benefit, .lp.aesthetic-studio .service-card { border-color: color-mix(in srgb, var(--border) 55%, transparent); }
+`,
+  },
+  bold: {
+    cls: "aesthetic-bold",
+    css: `
+.lp.aesthetic-bold { --radius: 10px; --radius-lg: 16px; --shadow: 0 30px 70px -24px rgba(0,0,0,0.7); }
+.lp.aesthetic-bold .hero h1 { letter-spacing: -0.04em; font-weight: 800; }
+.lp.aesthetic-bold .btn { font-weight: 700; }
+.lp.aesthetic-bold .feature, .lp.aesthetic-bold .benefit, .lp.aesthetic-bold .service-card { border-width: var(--border-w-strong); }
+.lp.aesthetic-bold .cta-band { border-width: var(--border-w-strong); }
+.lp.aesthetic-bold .step-num, .lp.aesthetic-bold .q-mark, .lp.aesthetic-bold .benefit .mark { border-width: var(--border-w-strong); }
+`,
+  },
+};
+
+export function aestheticSkin(aesthetic: AestheticChoice): AestheticSkin {
+  return AESTHETIC_SKINS[aesthetic] ?? AESTHETIC_SKINS.saas;
+}
 

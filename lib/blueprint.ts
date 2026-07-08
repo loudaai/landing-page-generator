@@ -1,4 +1,5 @@
 import type {
+  AestheticChoice,
   BackgroundStyle,
   ContactMode,
   DecorationChoice,
@@ -91,6 +92,8 @@ const DECORATION_CHOICES: DecorationChoice[] = [
   "balanced",
   "rich",
 ];
+
+const AESTHETICS: AestheticChoice[] = ["studio", "saas", "bold", "minimal"];
 
 const CONTACT_MODES: ContactMode[] = [
   "email",
@@ -338,6 +341,7 @@ export function defaultBlueprint(prompt = ""): PageBlueprint {
       radius: "soft",
       density: "balanced",
       decoration: "balanced",
+      aesthetic: "saas",
     },
     navigation: {
       showNav: true,
@@ -455,6 +459,7 @@ export function normalizePageBlueprint(
   const radius = pick(themeRaw.radius, RADIUS_CHOICES, "soft") as RadiusChoice;
   const density = pick(themeRaw.density, DENSITY_CHOICES, "balanced") as DensityChoice;
   const decoration = pick(themeRaw.decoration, DECORATION_CHOICES, "balanced") as DecorationChoice;
+  const aesthetic = pick(themeRaw.aesthetic, AESTHETICS, "saas") as AestheticChoice;
 
   const sections = asArray(obj.sections)
     .map(normalizeSection)
@@ -526,6 +531,7 @@ export function normalizePageBlueprint(
       radius,
       density,
       decoration,
+      aesthetic,
     },
     navigation: {
       showNav: navRaw.showNav !== false,
@@ -670,6 +676,7 @@ export function legacyContentToBlueprint(content: {
       radius: "soft",
       density: "balanced",
       decoration: "balanced",
+      aesthetic: "saas",
     },
     navigation: { showNav: true, items: [] },
     sections,

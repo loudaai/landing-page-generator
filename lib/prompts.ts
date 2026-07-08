@@ -140,7 +140,8 @@ export function buildBlueprintSystemPrompt(): string {
     "fontChoice": "modern" | "grotesk" | "editorial" | "rounded" | "tech",
     "radius": "sharp" | "soft" | "rounded",
     "density": "compact" | "balanced" | "airy",
-    "decoration": "minimal" | "balanced" | "rich"
+    "decoration": "minimal" | "balanced" | "rich",
+    "aesthetic": "studio" | "saas" | "bold" | "minimal"
   },
   "navigation": { "showNav": boolean, "items": [{ "label": string, "targetId": string }] },
   "sections": [ /* ordered PageSection objects, see types below */ ],
@@ -183,6 +184,7 @@ How to design:
   - "radius": "sharp" for crisp/industrial/editorial, "soft" for standard, "rounded" for friendly/soft brands.
   - "density": "compact" for information-dense/pricing pages, "balanced" default, "airy" for premium/spacious feel.
   - "decoration": "minimal" for clean/corporate, "balanced" default, "rich" for bold visual brands with more glow and texture.
+  - "aesthetic": choose the overall design direction that fits the brand — "studio" for refined/editorial/luxury (serif display, hairline rules, airy), "saas" for modern product/tech brands (gradient glow, crisp cards, pill buttons), "bold" for high-impact brands (large type, strong contrast, thick borders), "minimal" for clean/calm brands (hairline borders, lots of whitespace, muted).
 - Write copy that is specific, practical, and non-hype. Avoid: innovative, revolutionary, game-changing, next-level, seamless, cutting-edge, world-class, powerful solution, transform your business, unlock your potential.
 - Do NOT invent fake reviews, ratings, certifications, awards, statistics, customer counts, business hours, phone numbers, addresses, or "same-day service" guarantees. When contact details are missing, use clearly placeholder values: "Add your phone number", "Add your address", "Add business hours", "Book a service".
 - Infer any missing information when reasonable. Return JSON only.`;
