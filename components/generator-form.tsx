@@ -62,10 +62,15 @@ function Field({
   );
 }
 
-export function GeneratorForm() {
+export function GeneratorForm({
+  onGenerate,
+  loading = false,
+}: {
+  onGenerate: (input: LandingPageFormInput) => void;
+  loading?: boolean;
+}) {
   const [form, setForm] = React.useState<LandingPageFormInput>(EMPTY_FORM_INPUT);
   const [errors, setErrors] = React.useState<FormErrors>({});
-  const [showGenerateNote, setShowGenerateNote] = React.useState(false);
 
   function update<K extends keyof LandingPageFormInput>(
     key: K,
@@ -83,17 +88,13 @@ export function GeneratorForm() {
   function applyPreset(input: LandingPageFormInput) {
     setForm(input);
     setErrors({});
-    setShowGenerateNote(false);
   }
 
   function handleGenerate() {
     const found = validateLandingPageForm(form);
     setErrors(found);
-    if (hasErrors(found)) {
-      setShowGenerateNote(false);
-      return;
-    }
-    setShowGenerateNote(true);
+    if (hasErrors(found)) return;
+    onGenerate(form);
   }
 
   return (
@@ -101,11 +102,10 @@ export function GeneratorForm() {
       <CardHeader>
         <div className="flex flex-wrap items-center gap-2">
           <CardTitle>Describe your landing page</CardTitle>
-          <Badge variant="outline">Form only</Badge>
+          <Badge variant="outline">AI ready</Badge>
         </div>
         <CardDescription>
-          Fill in the details, or start from an example preset. AI generation
-          connects in the next step.
+          Fill in the details, or start from an example preset, then generate.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
@@ -121,6 +121,7 @@ export function GeneratorForm() {
                 variant="outline"
                 size="sm"
                 onClick={() => applyPreset(preset.input)}
+                disabled={loading}
               >
                 {preset.label}
               </Button>
@@ -135,6 +136,7 @@ export function GeneratorForm() {
             value={form.brandName}
             onChange={(e) => update("brandName", e.target.value)}
             aria-invalid={Boolean(errors.brandName)}
+            disabled={loading}
           />
         </Field>
 
@@ -145,6 +147,7 @@ export function GeneratorForm() {
             value={form.whatItDoes}
             onChange={(e) => update("whatItDoes", e.target.value)}
             aria-invalid={Boolean(errors.whatItDoes)}
+            disabled={loading}
           />
         </Field>
 
@@ -155,6 +158,7 @@ export function GeneratorForm() {
             value={form.targetAudience}
             onChange={(e) => update("targetAudience", e.target.value)}
             aria-invalid={Boolean(errors.targetAudience)}
+            disabled={loading}
           />
         </Field>
 
@@ -165,6 +169,7 @@ export function GeneratorForm() {
             value={form.mainProblem}
             onChange={(e) => update("mainProblem", e.target.value)}
             aria-invalid={Boolean(errors.mainProblem)}
+            disabled={loading}
           />
         </Field>
 
@@ -175,13 +180,17 @@ export function GeneratorForm() {
             value={form.mainBenefit}
             onChange={(e) => update("mainBenefit", e.target.value)}
             aria-invalid={Boolean(errors.mainBenefit)}
+            disabled={loading}
           />
         </Field>
 
         <Field label="Tone" htmlFor="tone" error={errors.tone}>
           <Select
             value={form.tone}
-            onValueChange={(value) => update("tone", value as LandingPageFormInput["tone"])}
+            onValueChange={(value) =>
+              update("tone", value as LandingPageFormInput["tone"])
+            }
+            disabled={loading}
           >
             <SelectTrigger id="tone" className="w-full">
               <SelectValue />
@@ -203,6 +212,7 @@ export function GeneratorForm() {
             value={form.primaryCTA}
             onChange={(e) => update("primaryCTA", e.target.value)}
             aria-invalid={Boolean(errors.primaryCTA)}
+            disabled={loading}
           />
         </Field>
 
@@ -212,6 +222,7 @@ export function GeneratorForm() {
             placeholder="e.g. First order 10% off"
             value={form.offerOrPricing}
             onChange={(e) => update("offerOrPricing", e.target.value)}
+            disabled={loading}
           />
         </Field>
 
@@ -221,18 +232,19 @@ export function GeneratorForm() {
             placeholder="e.g. hello@example.com"
             value={form.contactInfo}
             onChange={(e) => update("contactInfo", e.target.value)}
+            disabled={loading}
           />
         </Field>
 
-        <Button type="button" size="lg" className="w-full" onClick={handleGenerate}>
-          Generate landing page
+        <Button
+          type="button"
+          size="lg"
+          className="w-full"
+          onClick={handleGenerate}
+          disabled={loading}
+        >
+          {loading ? "Generating..." : "Generate landing page"}
         </Button>
-
-        {showGenerateNote ? (
-          <p className="text-center text-xs text-muted-foreground">
-            Form looks good. AI generation will be connected in the next step.
-          </p>
-        ) : null}
       </CardContent>
     </Card>
   );
