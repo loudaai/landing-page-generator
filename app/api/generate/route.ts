@@ -1,13 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import {
-  buildSystemPrompt,
-  buildRevisionPrompt,
-  buildUserPrompt,
+  buildBlueprintSystemPrompt,
+  buildBlueprintRevisionPrompt,
+  buildBlueprintUserPrompt,
 } from "@/lib/prompts";
-import { normalizeLandingPageContent, parseAiJson } from "@/lib/parse";
+import { normalizePageBlueprint } from "@/lib/blueprint";
+import { parseAiJson } from "@/lib/parse";
 import { validateLandingPageForm } from "@/lib/validation";
-import type { LandingPageContent, LandingPageFormInput } from "@/lib/types";
+import type { PageBlueprint, LandingPageFormInput } from "@/lib/types";
 
 const MODEL = process.env.OPENROUTER_MODEL || "tencent/hy3:free";
 const API_KEY = process.env.OPENROUTER_API_KEY;
@@ -99,12 +100,12 @@ export async function POST(req: NextRequest) {
   const revisionInstruction = raw.revision
     ? String(raw.revision).trim()
     : undefined;
-  const currentContent = (raw.currentContent ?? null) as LandingPageContent | null;
+  const currentBlueprint = (raw.currentBlueprint ?? null) as PageBlueprint | null;
 
-  const systemPrompt = buildSystemPrompt();
+  const systemPrompt = buildBlueprintSystemPrompt();
   const userPrompt = revisionInstruction
-    ? buildRevisionPrompt(input, currentContent, revisionInstruction)
-    : buildUserPrompt(input);
+    ? buildBlueprintRevisionPrompt(input, currentBlueprint, revisionInstruction)
+    : buildBlueprintUserPrompt(input);
 
   const attempts: ChatMessage[][] = [
     [
@@ -112,7 +113,7 @@ export async function POST(req: NextRequest) {
       { role: "user", content: userPrompt },
     ],
     [
-      { role: "system", content: `${systemPrompt}\n\nYour previous response was not valid JSON. Respond with ONLY the JSON object and nothing else.` },
+      { role: "system", content: `${systemPrompt}\n\nYour previous response was not valid JSON, or it was missing the required blueprint fields. Respond with ONLY the PageBlueprint JSON object and nothing else.` },
       { role: "user", content: userPrompt },
     ],
   ];
@@ -132,11 +133,15 @@ export async function POST(req: NextRequest) {
     }
 
     const parsed = parseAiJson(rawContent);
-    if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0) {
-      const content = normalizeLandingPageContent(parsed);
-      return NextResponse.json({ content });
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      (("sections" in parsed) || ("meta" in parsed))
+    ) {
+      const blueprint = normalizePageBlueprint(parsed, input.prompt);
+      return NextResponse.json({ blueprint });
     }
-    lastError = "The AI returned an invalid format. Retrying...";
+    lastError = "The AI returned an invalid blueprint. Retrying...";
   }
 
   return NextResponse.json({ error: lastError }, { status: 502 });

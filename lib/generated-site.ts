@@ -1,4 +1,9 @@
-import type { LandingPageContent, LandingPageDesignInput } from "./types";
+import type {
+  GraphicType,
+  LandingPageContent,
+  LandingPageDesignInput,
+  VisualStyle,
+} from "./types";
 
 type Vars = Record<string, string>;
 
@@ -31,16 +36,6 @@ const LIGHT_CURATED = {
   secondary: "#e7e7e3",
   accent: "#52525b",
 };
-
-export type VisualStyle =
-  | "auto"
-  | "local-business"
-  | "saas"
-  | "fitness"
-  | "education"
-  | "portfolio"
-  | "service"
-  | "default";
 
 export function inferVisualStyle(content: LandingPageContent): VisualStyle {
   const text = [
@@ -514,3 +509,187 @@ body { overflow-x: hidden; font-family: ui-sans-serif, system-ui, -apple-system,
 .lp footer.site .brand { font-size: 15px; }
 .lp .muted-text { color: var(--muted); }
 `;
+
+/* -------------------------------------------------------------------------- */
+/* Blueprint-aware deterministic graphics                                    */
+/* -------------------------------------------------------------------------- */
+
+function autoInspectionGraphic(design: LandingPageDesignInput): string {
+  const accent = design.accentColor;
+  return `<div class="art-card art-main" style="left:10%;top:12%;right:10%;width:auto">
+    <div class="art-head"><span class="art-chip">Vehicle inspection</span><span class="art-status">In progress</span></div>
+    <div class="art-checklist">
+      <span class="art-row"><span class="art-box on"></span><span class="art-line"></span></span>
+      <span class="art-row"><span class="art-box on"></span><span class="art-line short"></span></span>
+      <span class="art-row"><span class="art-box"></span><span class="art-line tiny"></span></span>
+    </div>
+    <div class="art-foot">${wrenchSvg(accent)}<span class="art-line short"></span></div>
+  </div>`;
+}
+
+function autoBookingGraphic(design: LandingPageDesignInput): string {
+  const accent = design.accentColor;
+  return `<div class="art-card art-float" style="right:8%;bottom:12%;width:44%">
+    <span class="art-dot"></span>
+    <div class="art-line"></div>
+    <div class="art-line short"></div>
+    <span class="sc-cta" style="background:${design.primaryColor};color:${readableText(design.primaryColor)}">Book a service</span>
+    <span class="art-line tiny"></span>
+  </div>`;
+}
+
+function workflowGraphic(): string {
+  const nodes = ["1", "2", "3"].map((n) => `<span class="wf-node">${n}</span>`).join('<span class="wf-line"></span>');
+  return `<div class="art-card art-main" style="left:10%;top:14%;right:10%;width:auto">
+    <div class="art-head"><span class="art-chip">Workflow</span><span class="art-status">Automated</span></div>
+    <div class="wf-row">${nodes}</div>
+    <div class="art-line short"></div>
+  </div>`;
+}
+
+function studyGraphic(): string {
+  return `<div class="art-card art-main" style="left:8%;top:12%;right:8%;width:auto">
+    <div class="art-head"><span class="art-chip">Study set</span><span class="art-status">82%</span></div>
+    <div class="art-notes">
+      <span class="art-line"></span><span class="art-line"></span><span class="art-line short"></span><span class="art-line tiny"></span>
+    </div>
+    <div class="art-checklist">
+      <span class="art-row"><span class="art-box on"></span><span class="art-line short"></span></span>
+      <span class="art-row"><span class="art-box"></span><span class="art-line tiny"></span></span>
+    </div>
+  </div>`;
+}
+
+function localBizGraphic(design: LandingPageDesignInput): string {
+  return `<div class="art-card art-main" style="left:8%;top:12%;right:8%;width:auto">
+    <div class="art-head"><span class="art-chip">Visit us</span><span class="art-status">Local</span></div>
+    <div class="art-notes">
+      <span class="art-line"></span><span class="art-line short"></span>
+    </div>
+    <div class="art-line tiny"></div>
+    <span class="sc-cta" style="background:${design.primaryColor};color:${readableText(design.primaryColor)}">Add your address</span>
+  </div>`;
+}
+
+function portfolioGraphic(): string {
+  return `<div class="art-card art-main" style="left:10%;top:14%;width:46%">
+    <div class="art-line"></div><div class="art-line short"></div>
+  </div>
+  <div class="art-card art-float" style="right:10%;bottom:14%;width:40%">
+    <div class="art-bar"></div><div class="art-line"></div>
+  </div>`;
+}
+
+export function heroGraphicHtml(
+  graphic: GraphicType,
+  design: LandingPageDesignInput
+): string {
+  const enhanced = design.useGeneratedImages ? " art-enhanced" : "";
+  const base = `<div class="art-glow"></div><div class="art-grid"></div>`;
+
+  switch (graphic) {
+    case "auto-service-dashboard":
+      return `<div class="hero-art art-auto${enhanced}" aria-hidden="true">${base}${autoInspectionGraphic(design)}${autoBookingGraphic(design)}</div>`;
+    case "inspection-checklist":
+      return `<div class="hero-art art-auto${enhanced}" aria-hidden="true">${base}${autoInspectionGraphic(design)}</div>`;
+    case "booking-card":
+      return `<div class="hero-art art-auto${enhanced}" aria-hidden="true">${base}${autoBookingGraphic(design)}</div>`;
+    case "saas-dashboard":
+      return heroArtHtml("saas", design);
+    case "workflow-nodes":
+      return `<div class="hero-art${enhanced}" aria-hidden="true">${base}${workflowGraphic()}</div>`;
+    case "fitness-progress":
+      return heroArtHtml("fitness", design);
+    case "study-cards":
+      return `<div class="hero-art art-edu${enhanced}" aria-hidden="true">${base}${studyGraphic()}</div>`;
+    case "local-business-card":
+      return `<div class="hero-art${enhanced}" aria-hidden="true">${base}${localBizGraphic(design)}</div>`;
+    case "portfolio-showcase":
+      return `<div class="hero-art${enhanced}" aria-hidden="true">${base}${portfolioGraphic()}</div>`;
+    case "abstract-gradient":
+      return heroArtHtml("default", design);
+    case "none":
+    default:
+      return "";
+  }
+}
+
+export function sectionGraphicHtml(
+  graphic: GraphicType,
+  design: LandingPageDesignInput
+): string {
+  if (graphic === "none") return "";
+  return heroGraphicHtml(graphic, design);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Blueprint section CSS                                                      */
+/* -------------------------------------------------------------------------- */
+
+export const BLUEPRINT_CSS = `
+/* Navigation */
+.lp .nav-link { color: inherit; text-decoration: none; font-size: 14px; transition: color .15s ease; }
+.lp .nav-link:hover { color: var(--fg); }
+.lp .header-cta .btn { height: 40px; padding: 0 18px; font-size: 14px; }
+
+/* Hero layout variants */
+.lp .hero.centered { grid-template-columns: 1fr; text-align: center; }
+.lp .hero.centered .cta { justify-content: center; }
+.lp .hero.centered .eyebrow { margin-left: auto; margin-right: auto; }
+.lp .hero.service-hero .hero-copy { order: 1; }
+.lp .hero.service-hero .hero-visual { order: 0; }
+.lp .hero .hero-visual { width: 100%; }
+
+/* Value strip */
+.lp .value-strip { display: flex; flex-wrap: wrap; gap: 12px; }
+.lp .value-strip.row { justify-content: center; }
+.lp .vs-item { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 13px; color: var(--muted); }
+.lp .vs-item::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: var(--accent); }
+.lp .value-strip.chips { gap: 10px; }
+.lp .value-strip.chips .vs-item { border-radius: 12px; }
+
+/* Services */
+.lp .services-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.lp .service-card { border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); padding: clamp(22px, 2.6vw, 30px); }
+.lp .service-card h3 { font-size: clamp(17px, 1.8vw, 21px); }
+.lp .service-card p { font-size: 15px; margin-top: 8px; }
+.lp .service-list { display: flex; flex-direction: column; gap: 12px; }
+.lp .service-row { display: flex; gap: 16px; align-items: flex-start; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); padding: 20px; }
+.lp .service-row .sr-num { flex: none; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--tint); color: var(--primary); border: 1px solid var(--border-strong); font-weight: 700; font-size: 14px; }
+@media (min-width: 720px) { .lp .services-grid { grid-template-columns: repeat(3, 1fr); } .lp .services.bento .services-grid { grid-template-columns: repeat(6, 1fr); } .lp .services.bento .service-card { grid-column: span 2; } }
+.lp .services.bento .service-card:nth-child(4n+1) { grid-column: span 3; }
+.lp .services.bento .service-card:nth-child(4n) { grid-column: span 3; }
+
+/* Process */
+.lp .steps { display: grid; grid-template-columns: 1fr; gap: 16px; counter-reset: step; }
+.lp .step { display: flex; gap: 16px; align-items: flex-start; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); padding: 22px; }
+.lp .step .step-num { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--primary); color: var(--primary-fg); font-weight: 700; }
+.lp .step h3 { font-size: 17px; } .lp .step p { font-size: 15px; margin-top: 6px; }
+.lp .timeline { display: flex; flex-direction: column; gap: 0; border-left: 2px solid var(--border-strong); padding-left: 22px; }
+.lp .tl-item { position: relative; padding: 0 0 22px; }
+.lp .tl-item::before { content: ""; position: absolute; left: -29px; top: 4px; width: 12px; height: 12px; border-radius: 999px; background: var(--accent); }
+.lp .tl-item h3 { font-size: 17px; } .lp .tl-item p { font-size: 15px; }
+.lp .process-cards { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 720px) { .lp .steps, .lp .process-cards { grid-template-columns: repeat(3, 1fr); } }
+
+/* Workflow graphic */
+.lp .wf-row { display: flex; align-items: center; gap: 10px; }
+.lp .wf-node { width: 28px; height: 28px; border-radius: 9px; background: var(--primary); color: var(--primary-fg); display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+.lp .wf-line { flex: 1; height: 2px; background: var(--border-strong); border-radius: 2px; }
+
+/* Pricing / offer */
+.lp .offer { border: 1px solid var(--border-strong); background: linear-gradient(160deg, var(--surface), var(--surface-2)); border-radius: var(--radius-lg); padding: clamp(28px, 4vw, 48px); text-align: center; }
+.lp .offer p { font-size: clamp(16px, 1.6vw, 19px); color: var(--fg); max-width: 60ch; margin: 14px auto 0; }
+.lp .offer .cta { justify-content: center; display: flex; flex-wrap: wrap; gap: 14px; margin-top: 24px; }
+
+/* Contact */
+.lp .contact-card { border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius-lg); padding: clamp(26px, 3vw, 40px); display: grid; gap: 16px; }
+.lp .contact-card .cc-row { display: flex; align-items: center; gap: 12px; font-size: 15px; color: var(--fg); }
+.lp .contact-card .cc-ic { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--tint); color: var(--accent); border: 1px solid var(--border-strong); font-weight: 700; }
+.lp .contact.split { grid-template-columns: 1fr; gap: 28px; align-items: center; }
+@media (min-width: 820px) { .lp .contact.split { grid-template-columns: 1fr 1fr; } }
+
+/* Section eyebrow helper already exists; ensure spacing */
+.lp .section-head .eyebrow { margin-bottom: 14px; }
+`;
+

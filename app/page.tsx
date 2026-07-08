@@ -4,7 +4,8 @@ import * as React from "react";
 
 import { StartScreen } from "@/components/start-screen";
 import { Workspace } from "@/components/workspace";
-import { generateStandaloneHtml } from "@/lib/html-export";
+import { generateStandaloneHtmlFromBlueprint } from "@/lib/html-export";
+import { normalizePageBlueprint } from "@/lib/blueprint";
 import {
   DEFAULT_DESIGN,
   EMPTY_FORM_INPUT,
@@ -12,7 +13,7 @@ import {
   type ClarifyingAnswer,
   type ClarifyingQuestion,
   type GenerationStatus,
-  type LandingPageContent,
+  type PageBlueprint,
   type LandingPageDesignInput,
   type LandingPageFormInput,
 } from "@/lib/types";
@@ -42,7 +43,7 @@ export default function Home() {
   const [followUp, setFollowUp] = React.useState("");
   const [errors, setErrors] = React.useState<FormErrors>({});
 
-  const currentContentRef = React.useRef<LandingPageContent | null>(null);
+  const currentContentRef = React.useRef<PageBlueprint | null>(null);
   const formRef = React.useRef<LandingPageFormInput>(form);
   formRef.current = form;
   const thoughtStartRef = React.useRef(0);
@@ -93,18 +94,18 @@ export default function Home() {
           ...formRef.current,
           prompt: effectivePrompt,
           ...(revision
-            ? { revision, currentContent: currentContentRef.current }
+            ? { revision, currentBlueprint: currentContentRef.current }
             : {}),
         }),
       });
       const data = await res.json().catch(() => null);
-      if (!res.ok || !data?.content) {
+      if (!res.ok || !data?.blueprint) {
         throw new Error(data?.error ?? "Generation failed. Please try again.");
       }
-      const nextContent = data.content as LandingPageContent;
-      currentContentRef.current = nextContent;
-      setGeneratedHtml(generateStandaloneHtml(nextContent, designArg));
-      setProjectName(nextContent.brandName ?? "");
+      const nextBlueprint = normalizePageBlueprint(data.blueprint);
+      currentContentRef.current = nextBlueprint;
+      setGeneratedHtml(generateStandaloneHtmlFromBlueprint(nextBlueprint, designArg));
+      setProjectName(nextBlueprint.meta.brandName ?? "");
       setStatus("ready");
       pushMessage({
         role: "assistant",

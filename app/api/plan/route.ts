@@ -16,54 +16,79 @@ function extractBrand(prompt: string): string | undefined {
   return match?.[1]?.trim();
 }
 
+function inferIndustry(prompt: string): string {
+  const p = prompt.toLowerCase();
+  if (/auto|vehicle|car|repair|mechanic|garage|tire|motor|fleet|brake/.test(p))
+    return "auto";
+  if (/gym|workout|fitness|exercise|training|wellness|habit|routine/.test(p))
+    return "fitness";
+  if (/study|student|learn|course|school|exam|education|tutoring|quiz/.test(p))
+    return "education";
+  if (/app|software|saas|ai tool|platform|dashboard|api|startup|productivity/.test(p))
+    return "saas";
+  if (/coffee|restaurant|cafe|shop|store|bakery|menu|local/.test(p))
+    return "local-business";
+  if (/portfolio|designer|photographer|artist|writer|creative/.test(p))
+    return "portfolio";
+  if (/agency|freelance|studio|consult/.test(p)) return "agency";
+  if (/personal brand|coach|creator|influencer/.test(p)) return "personal-brand";
+  return "default";
+}
+
 function localPlan(prompt: string): PlanningResult {
   const brand = extractBrand(prompt);
+  const visualStyle = inferIndustry(prompt);
+
   const questions: ClarifyingQuestion[] = [
     {
       id: "cta",
       question: "What should visitors do first?",
-      recommendedOption: "Book a service appointment",
+      recommendedOption: "Get in touch",
       options: [
-        "Book a service appointment",
-        "Call the shop",
-        "Send a message",
+        "Get in touch",
+        "Book a call",
         "Request a quote",
+        "Shop now",
+        "Sign up",
       ],
       allowCustomAnswer: true,
     },
     {
-      id: "services",
-      question: "Which services should the page emphasize?",
-      recommendedOption: "General auto repair",
+      id: "audience",
+      question: "Who is the page mainly for?",
+      recommendedOption: "New customers",
       options: [
-        "Oil & routine maintenance",
-        "Diagnostics and repairs",
-        "Brake and suspension work",
-        "General auto repair",
+        "New customers",
+        "Existing customers",
+        "Local community",
+        "Other businesses",
+        "Other",
       ],
       allowCustomAnswer: true,
     },
     {
-      id: "vibe",
-      question: "What vibe should the page have?",
-      recommendedOption: "Bold and industrial",
+      id: "offer",
+      question: "What offer or service should be emphasized?",
+      recommendedOption: "Your main service",
       options: [
-        "Bold and industrial",
-        "Clean and professional",
-        "Friendly local business",
-        "Premium automotive",
+        "Your main service",
+        "A special offer",
+        "A free consultation",
+        "A featured product",
+        "Other",
       ],
       allowCustomAnswer: true,
     },
     {
-      id: "contact",
-      question: "What contact information should the page use?",
-      recommendedOption: "Use placeholders for now",
+      id: "tone",
+      question: "What tone should the page use?",
+      recommendedOption: "Clear and practical",
       options: [
-        "Use placeholders for now",
-        "Use a phone number",
-        "Use an email",
-        "Use an address",
+        "Clear and practical",
+        "Friendly and casual",
+        "Professional and direct",
+        "Premium but not hypey",
+        "Other",
       ],
       allowCustomAnswer: true,
     },
@@ -74,10 +99,10 @@ function localPlan(prompt: string): PlanningResult {
     confidence: "low",
     inferred: {
       brandName: brand,
-      businessType: "automotive repair shop",
-      primaryCTA: "Book a service",
-      tone: "Local business style",
-      visualStyle: "auto",
+      businessType: undefined,
+      primaryCTA: "Get in touch",
+      tone: "Clear and practical",
+      visualStyle,
     },
     questions,
   };

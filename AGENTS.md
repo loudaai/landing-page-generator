@@ -108,14 +108,16 @@ The app owns:
 Pipeline:
 
 ```txt
-User form + design input
-→ Server-side OpenRouter call (text only)
-→ Structured JSON content
-→ Parse and normalize response
-→ Render React preview (with logo, colors, theme, graphics)
-→ Generate standalone HTML string
+User prompt + design input
+→ Planner asks questions if needed (max 4, one-by-one)
+→ Server-side OpenRouter call (text only) returns a PageBlueprint JSON
+→ Parse and normalize the blueprint (validate, repair, fallback)
+→ App renders the page from the blueprint using trusted components
+→ Generate standalone HTML string from the same blueprint
 → Copy or download index.html
 ```
+
+The LLM is an AI page architect: it decides industry, visual style, section order, section types, layouts, CTA strategy, hero/section graphics, and content density. It does NOT generate raw HTML, CSS, or React. The app owns rendering, CSS, responsive behavior, deterministic graphics, escaping, and export.
 
 ## Required Form Fields
 
@@ -519,3 +521,51 @@ A focused polish pass: clean v0-style composer, muted chat, one-by-one questions
 * Assistant chat has no heavy background/borders; thought state muted + neutral icon.
 * Questions one-by-one; options clean; Copy/Download icon-only.
 * Generated auto pages tailored; no fake claims; exported HTML no white border; `npm run build` passes.
+
+## PageBlueprint Architecture
+
+This is the current core architecture. p0r is an AI page architect, not a copy generator.
+
+### Output shape
+
+The LLM returns a PageBlueprint JSON (see lib/types.ts), not flat copy.
+
+`	s
+type PageBlueprint = {
+  meta: { brandName, industry, inferredAudience, pageGoal, visualStyle, tone }
+  theme: { mode, paletteSource, primaryColor, secondaryColor, accentColor, backgroundStyle }
+  navigation: { showNav, items: { label, targetId }[] }
+  sections: PageSection[]   // hero, value-strip, services, problem-solution, benefits, features, process, showcase, pricing-offer, contact, faq, final-cta, footer
+  ctaStrategy: { primaryCTA, secondaryCTA?, contactMode }
+  graphics: { heroVisual: GraphicType, sectionVisuals: GraphicType[], useGeneratedImages }
+}
+`
+
+### Responsibilities
+
+* LLM owns: industry, visual style, theme direction, section order, section types, section layouts, CTA strategy, hero/section graphics choice, content density, what sections to include.
+* App owns: React/HTML rendering, CSS, responsive behavior, escaping, security, copy/download, iframe preview, deterministic graphics implementation, color system, theme system.
+
+### Single source of truth
+
+* const generatedHtml = generateStandaloneHtmlFromBlueprint(blueprint, design).
+* iframe preview, Copy HTML, and Download index.html all use this exact string.
+* The legacy generateStandaloneHtml(content, design) converts LandingPageContent via legacyContentToBlueprint for backward compatibility only.
+
+### Files
+
+* lib/types.ts: PageBlueprint, PageSection union, VisualStyle, GraphicType, BackgroundStyle.
+* lib/blueprint.ts: 
+ormalizePageBlueprint, defaultBlueprint, legacyContentToBlueprint.
+* lib/prompts.ts: uildBlueprintSystemPrompt, uildBlueprintUserPrompt, uildBlueprintRevisionPrompt.
+* pp/api/generate/route.ts: returns { blueprint }; accepts { prompt, ...form, revision?, currentBlueprint? }.
+* lib/generated-site.ts: 	hemeVars, esolvePalette, heroGraphicHtml, sectionGraphicHtml, showcaseGraphicHtml, eatureGlyphSvg, GENERATED_SITE_CSS, BLUEPRINT_CSS.
+* lib/html-export.ts: generateStandaloneHtmlFromBlueprint + section renderers (one per section type).
+
+### Follow-up revision
+
+Workspace follow-up sends { prompt, answers, currentBlueprint, revision: instruction }. The LLM returns a revised full PageBlueprint. No raw AI HTML/React/CSS is executed.
+
+### No fake claims
+
+Blueprints must never invent reviews, ratings, certifications, awards, stats, customer counts, business hours, phone numbers, addresses, or same-day guarantees. Use placeholders: Add your phone number, Add your address, Add business hours, Book a service.
